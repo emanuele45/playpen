@@ -147,7 +147,7 @@ function template_main()
 	{
 		echo '
 	<div class="pagesection">
-		<div class="pagelinks floatleft">', $txt['pages'], ': ', $context['page_index'], !empty($modSettings['topbottomEnable']) ? $context['menu_separator'] . '&nbsp;&nbsp;<a href="#bot"><strong>' . $txt['go_down'] . '</strong></a>' : '', '</div>
+		<div class="pagelinks floatleft">', $txt['pages'], ': ', template_page_index('page_index'), !empty($modSettings['topbottomEnable']) ? $context['menu_separator'] . '&nbsp;&nbsp;<a href="#bot"><strong>' . $txt['go_down'] . '</strong></a>' : '', '</div>
 		', template_button_strip($normal_buttons, 'right'), '
 	</div>';
 
@@ -264,7 +264,7 @@ function template_main()
 
 			echo '
 							<p>', $txt['started_by'], ' ', $topic['first_post']['member']['link'], '
-								<small id="pages' . $topic['first_post']['id'] . '">', $topic['pages'], '</small>
+								<small id="pages' . $topic['first_post']['id'] . '">', template_page_index('topic_page_index' . $topic['id']), '</small>
 							</p>
 						</div>
 					</td>
@@ -370,7 +370,7 @@ function template_main()
 		echo '
 	<div class="pagesection">
 		', template_button_strip($normal_buttons, 'right'), '
-		<div class="pagelinks">', $txt['pages'], ': ', $context['page_index'], !empty($modSettings['topbottomEnable']) ? $context['menu_separator'] . '&nbsp;&nbsp;<a href="#top"><strong>' . $txt['go_up'] . '</strong></a>' : '', '</div>
+		<div class="pagelinks">', $txt['pages'], ': ', template_page_index('page_index'), !empty($modSettings['topbottomEnable']) ? $context['menu_separator'] . '&nbsp;&nbsp;<a href="#top"><strong>' . $txt['go_up'] . '</strong></a>' : '', '</div>
 	</div>';
 	}
 

@@ -635,4 +635,61 @@ function template_css()
 	<link rel="stylesheet" type="text/css" href="', $filename, '" />';
 }
 
+/**
+ * Output the page index
+ */
+function template_page_index($indexID, $listID = false)
+{
+	global $context, $txt;
+
+	if (empty($indexID) || !isset($context[$indexID]) || (!empty($listID) && !isset($context[$listID][$indexID])))
+		return;
+
+	$index_array = !empty($listID) ? $context[$listID][$indexID] : $context[$indexID];
+	$base_link = '<a class="navPages" href="' . $context[$indexID]['base_url'] . '">%2$s</a> ';
+	$pageindex = $context[$indexID]['show_prevnext'] ? '' : '&#171;';
+
+	if (isset($context[$indexID]['prev_page']))
+		$pageindex .= sprintf($base_link, $context[$indexID]['prev_page'], '<span class="previous_page">&#171; ' . $txt['prev'] . '</span>');
+
+	if (!empty($context[$indexID]['first_page']))
+		$pageindex .= sprintf($base_link, $context[$indexID]['first_page'][0], $context[$indexID]['first_page'][1]);
+
+	if (!empty($context[$indexID]['expand_before']))
+		$pageindex .= '<span style="font-weight: bold;" onclick="' . htmlspecialchars('expandPages(this, ' . $context[$indexID]['expand_before'] . ');') . '" onmouseover="this.style.cursor = \'pointer\';"> ... </span>';
+
+	if (!empty($context[$indexID]['previous_pages']))
+		foreach ($context[$indexID]['previous_pages'] as $page)
+			$pageindex .= sprintf($base_link, $page[0], $page[1]);
+
+	if (!empty($context[$indexID]['current_page']))
+		$pageindex .= '[<strong>' . $context[$indexID]['current_page'] . '</strong>] ';
+
+	if (!empty($context[$indexID]['following_pages']))
+		foreach ($context[$indexID]['following_pages'] as $page)
+			$pageindex .= sprintf($base_link, $page[0], $page[1]);
+
+	if (!empty($context[$indexID]['expand_after']))
+		$pageindex .= '<span style="font-weight: bold;" onclick="' . htmlspecialchars('expandPages(this, ' . $context[$indexID]['expand_after'] . ');') . '" onmouseover="this.style.cursor = \'pointer\';"> ... </span>';
+
+	if (!empty($context[$indexID]['last_page']))
+		$pageindex .= sprintf($base_link, $context[$indexID]['last_page'][0], $context[$indexID]['last_page'][1]);
+
+	if (isset($context[$indexID]['next_page']))
+		$pageindex .= sprintf($base_link, $context[$indexID]['next_page'], '<span class="previous_page">' . $txt['next'] . ' &#187;</span>');
+
+	$pageindex .= $context[$indexID]['show_prevnext'] ? '' : '&#187;';
+
+	if ($context[$indexID]['can_show_all'])
+	{
+		if (isset($_REQUEST['all']))
+			$pageindex .= empty($context[$indexID]['compactTopicPagesEnable']) ? '<strong>' . $txt['all'] . '</strong> ' : '[<strong>' . $txt['all'] . '</strong>] ';
+		// They aren't using it, but the *option* is there, at least.
+		else
+			$pageindex .= '&nbsp;<a href="' . $scripturl . '?topic=' . $topic . '.0;all">' . $txt['all'] . '</a> ';
+	}
+
+	return $pageindex;
+}
+
 ?>

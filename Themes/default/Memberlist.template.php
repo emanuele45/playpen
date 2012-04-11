@@ -34,7 +34,7 @@ function template_main()
 		</div>
 		<div class="pagesection">
 			', template_button_strip($memberlist_buttons, 'right'), '
-			<div class="pagelinks floatleft">', $txt['pages'], ': ', $context['page_index'], '</div>
+			<div class="pagelinks floatleft">', $txt['pages'], ': ', template_page_index('page_index'), '</div>
 		</div>';
 
 	echo '
@@ -142,7 +142,7 @@ function template_main()
 	// Show the page numbers again. (makes 'em easier to find!)
 	echo '
 		<div class="pagesection">
-			<div class="pagelinks floatleft">', $txt['pages'], ': ', $context['page_index'], '</div>';
+			<div class="pagelinks floatleft">', $txt['pages'], ': ', template_page_index('page_index'), '</div>';
 
 	// If it is displaying the result of a search show a "search again" link to edit their criteria.
 	if (isset($context['old_search']))

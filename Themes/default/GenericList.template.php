@@ -60,7 +60,7 @@ function template_show_list($list_id = null)
 		if (!empty($cur_list['items_per_page']))
 			echo '
 				<div class="floatleft">
-					<div class="pagesection">', $txt['pages'], ': ', $cur_list['page_index'], '</div>
+					<div class="pagesection">', $txt['pages'], ': ', template_page_index('page_index', $list_id), '</div>
 				</div>';
 
 		if (isset($cur_list['additional_rows']['above_column_headers']))
@@ -151,7 +151,7 @@ function template_show_list($list_id = null)
 		if (!empty($cur_list['items_per_page']))
 			echo '
 				<div class="floatleft">
-					<div class="pagesection">', $txt['pages'], ': ', $cur_list['page_index'], '</div>
+					<div class="pagesection">', $txt['pages'], ': ', template_page_index('page_index', $list_id), '</div>
 				</div>';
 
 		if (isset($cur_list['additional_rows']['below_table_data']))

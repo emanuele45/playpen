@@ -126,7 +126,7 @@ function template_find_members()
 		echo '
 					</ul>
 					<div class="pagesection">
-						', $txt['pages'], ': ', $context['page_index'], '
+						', $txt['pages'], ': ', template_page_index('page_index'), '
 					</div>';
 	}
 

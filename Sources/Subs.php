@@ -478,6 +478,8 @@ function updateSettings($changeArray, $update = false, $debug = false)
 }
 
 /**
+ * 2.0.x compatibility function
+ * For 2.1.x normal usage use template_page_index instead
  * Constructs a page list.
  *
  * - builds the page list, e.g. 1 ... 6 7 [8] 9 10 ... 15.
@@ -502,7 +504,73 @@ function updateSettings($changeArray, $update = false, $debug = false)
  */
 function constructPageIndex($base_url, &$start, $max_value, $num_per_page, $flexible_start = false, $show_prevnext = true)
 {
-	global $modSettings, $context, $txt;
+	global $context, $txt;
+
+	$page_index_array = prepareContextPageIndex($base_url, $start, $max_value, $num_per_page, $flexible_start, $show_prevnext);
+
+	$base_link = '<a class="navPages" href="' . $page_index_array['base_url'] . '">%2$s</a> ';
+	$pageindex = $page_index_array['show_prevnext'] ? '' : '&#171;';
+
+	if (isset($page_index_array['prev_page']))
+		$pageindex .= sprintf($base_link, $page_index_array['prev_page'], '<span class="previous_page">&#171; ' . $txt['prev'] . '</span>');
+
+	if (!empty($page_index_array['first_page']))
+		$pageindex .= sprintf($base_link, $page_index_array['first_page'][0], $page_index_array['first_page'][1]);
+
+	if (!empty($page_index_array['expand_before']))
+		$pageindex .= '<span style="font-weight: bold;" onclick="' . htmlspecialchars('expandPages(this, ' . $page_index_array['expand_before'] . ');') . '" onmouseover="this.style.cursor = \'pointer\';"> ... </span>';
+
+	if (!empty($page_index_array['previous_pages']))
+		foreach ($page_index_array['previous_pages'] as $page)
+			$pageindex .= sprintf($base_link, $page[0], $page[1]);
+
+	if (!empty($page_index_array['current_page']))
+		$pageindex .= '[<strong>' . $page_index_array['current_page'] . '</strong>] ';
+
+	if (!empty($page_index_array['following_pages']))
+		foreach ($page_index_array['following_pages'] as $page)
+			$pageindex .= sprintf($base_link, $page[0], $page[1]);
+
+	if (!empty($page_index_array['expand_after']))
+		$pageindex .= '<span style="font-weight: bold;" onclick="' . htmlspecialchars('expandPages(this, ' . $page_index_array['expand_after'] . ');') . '" onmouseover="this.style.cursor = \'pointer\';"> ... </span>';
+
+	if (!empty($page_index_array['last_page']))
+		$pageindex .= sprintf($base_link, $page_index_array['last_page'][0], $page_index_array['last_page'][1]);
+
+	if (isset($page_index_array['next_page']))
+		$pageindex .= sprintf($base_link, $page_index_array['next_page'], '<span class="previous_page">' . $txt['next'] . ' &#187;</span>');
+
+	$pageindex .= $page_index_array['show_prevnext'] ? '' : '&#187;';
+
+	return $pageindex;
+}
+
+/**
+ * Prepare $context values for a page list.
+ *
+ * - builds the page list, e.g. 1 ... 6 7 [8] 9 10 ... 15.
+ * - flexible_start causes it to use "url.page" instead of "url;start=page".
+ * - handles any wireless settings (adding special things to URLs.)
+ * - very importantly, cleans up the start value passed, and forces it to
+ *   be a multiple of num_per_page.
+ * - checks that start is not more than max_value.
+ * - base_url should be the URL without any start parameter on it.
+ * - uses the compactTopicPagesEnable and compactTopicPagesContiguous
+ *   settings to decide how to display the menu.
+ *
+ * an example is available near the function definition.
+ * $pageindex = constructPageIndex($scripturl . '?board=' . $board, $_REQUEST['start'], $num_messages, $maxindex, true);
+ * 
+ * @param string $base_url
+ * @param int $start
+ * @param int $max_value
+ * @param int $num_per_page
+ * @param bool $flexible_start = false
+ * @param bool $show_prevnext = true
+ */
+function prepareContextPageIndex($base_url, &$start, $max_value, $num_per_page, $flexible_start = false, $show_prevnext = true)
+{
+	global $modSettings, $context;
 
 	// Save whether $start was less than 0 or not.
 	$start = (int) $start;
@@ -524,23 +592,43 @@ function constructPageIndex($base_url, &$start, $max_value, $num_per_page, $flex
 	if (WIRELESS)
 		$base_url .= ';' . WIRELESS_PROTOCOL;
 
-	$base_link = '<a class="navPages" href="' . ($flexible_start ? $base_url : strtr($base_url, array('%' => '%%')) . ';start=%1$d') . '">%2$s</a> ';
+	$pageIndex = array(
+		'show_prevnext' => $show_prevnext,
+		'compactTopicPagesEnable' => $modSettings['compactTopicPagesEnable'],
+		'base_url' => $flexible_start ? $base_url : strtr($base_url, array('%' => '%%')) . ';start=%1$d',
+		'current_page' => 0,
+		'can_show_all' => false,
+		'previous_pages' => array(),
+		'following_pages' => array(),
+		'first_page' => array(),
+	);
 
 	// Compact pages is off or on?
 	if (empty($modSettings['compactTopicPagesEnable']))
 	{
 		// Show the left arrow.
-		$pageindex = $start == 0 ? ' ' : sprintf($base_link, $start - $num_per_page, '&#171;');
+		if (!empty($start))
+			$pageIndex['prev_page'] = $start - $num_per_page;
 
 		// Show all the pages.
 		$display_page = 1;
 		for ($counter = 0; $counter < $max_value; $counter += $num_per_page)
-			$pageindex .= $start == $counter && !$start_invalid ? '<strong>' . $display_page++ . '</strong> ' : sprintf($base_link, $counter, $display_page++);
+		{
+			if ($start == $counter && !$start_invalid)
+				$pageIndex['current_page'] = $display_page++;
+			elseif (empty($pageIndex['current_page']))
+				$pageIndex['previous_pages'][] = array($counter, $display_page++);
+			else
+				$pageIndex['following_pages'][] = array($counter, $display_page++);
+		}
 
 		// Show the right arrow.
 		$display_page = ($start + $num_per_page) > $max_value ? $max_value : ($start + $num_per_page);
 		if ($start != $counter - $max_value && !$start_invalid)
-			$pageindex .= $display_page > $counter - $num_per_page ? ' ' : sprintf($base_link, $display_page, '&#187;');
+		{
+			if ($display_page <= $counter - $num_per_page)
+				$pageIndex['next_page'] = $display_page;
+		}
 	}
 	else
 	{
@@ -549,31 +637,29 @@ function constructPageIndex($base_url, &$start, $max_value, $num_per_page, $flex
 
 		// Show the "prev page" link. (>prev page< 1 ... 6 7 [8] 9 10 ... 15 next page)
 		if (!empty($start) && $show_prevnext)
-			$pageindex = sprintf($base_link, $start - $num_per_page, '<span class="previous_page">&#171; ' . $txt['prev'] . '</span>');
-		else
-			$pageindex = '';
+			$pageIndex['prev_page'] = $start - $num_per_page;
 
 		// Show the first page. (prev page >1< ... 6 7 [8] 9 10 ... 15)
 		if ($start > $num_per_page * $PageContiguous)
-			$pageindex .= sprintf($base_link, 0, '1');
+			$pageIndex['first_page'] = array(0, '1');
 
 		// Show the ... after the first page.  (prev page 1 >...< 6 7 [8] 9 10 ... 15 next page)
 		if ($start > $num_per_page * ($PageContiguous + 1))
-			$pageindex .= '<span style="font-weight: bold;" onclick="' . htmlspecialchars('expandPages(this, ' . JavaScriptEscape(($flexible_start ? $base_url : strtr($base_url, array('%' => '%%')) . ';start=%1$d')) . ', ' . $num_per_page . ', ' . ($start - $num_per_page * $PageContiguous) . ', ' . $num_per_page . ');') . '" onmouseover="this.style.cursor = \'pointer\';"> ... </span>';
+			$pageIndex['expand_before'] = JavaScriptEscape(($flexible_start ? $base_url : strtr($base_url, array('%' => '%%')) . ';start=%1$d')) . ', ' . $num_per_page . ', ' . ($start - $num_per_page * $PageContiguous) . ', ' . $num_per_page;
 
 		// Show the pages before the current one. (prev page 1 ... >6 7< [8] 9 10 ... 15 next page)
 		for ($nCont = $PageContiguous; $nCont >= 1; $nCont--)
 			if ($start >= $num_per_page * $nCont)
 			{
 				$tmpStart = $start - $num_per_page * $nCont;
-				$pageindex.= sprintf($base_link, $tmpStart, $tmpStart / $num_per_page + 1);
+				$pageIndex['previous_pages'][] = array($tmpStart, $tmpStart / $num_per_page + 1);
 			}
 
 		// Show the current page. (prev page 1 ... 6 7 >[8]< 9 10 ... 15 next page)
 		if (!$start_invalid)
-			$pageindex .= '[<strong>' . ($start / $num_per_page + 1) . '</strong>] ';
+			$pageIndex['current_page'] = $start / $num_per_page + 1;
 		else
-			$pageindex .= sprintf($base_link, $start, $start / $num_per_page + 1);
+			$pageIndex['previous_pages'][] = array($start, $start / $num_per_page + 1);
 
 		// Show the pages after the current one... (prev page 1 ... 6 7 [8] >9 10< ... 15 next page)
 		$tmpMaxPages = (int) (($max_value - 1) / $num_per_page) * $num_per_page;
@@ -581,23 +667,23 @@ function constructPageIndex($base_url, &$start, $max_value, $num_per_page, $flex
 			if ($start + $num_per_page * $nCont <= $tmpMaxPages)
 			{
 				$tmpStart = $start + $num_per_page * $nCont;
-				$pageindex .= sprintf($base_link, $tmpStart, $tmpStart / $num_per_page + 1);
+				$pageIndex['following_pages'][] = array($tmpStart, $tmpStart / $num_per_page + 1);
 			}
 
 		// Show the '...' part near the end. (prev page 1 ... 6 7 [8] 9 10 >...< 15 next page)
 		if ($start + $num_per_page * ($PageContiguous + 1) < $tmpMaxPages)
-			$pageindex .= '<span style="font-weight: bold;" onclick="' . htmlspecialchars('expandPages(this, ' . JavaScriptEscape(($flexible_start ? $base_url : strtr($base_url, array('%' => '%%')) . ';start=%1$d')) . ', ' . ($start + $num_per_page * ($PageContiguous + 1)) . ', ' . $tmpMaxPages . ', ' . $num_per_page . ');') . '" onmouseover="this.style.cursor=\'pointer\';"> ... </span>';
+			$pageIndex['expand_after'] = JavaScriptEscape(($flexible_start ? $base_url : strtr($base_url, array('%' => '%%')) . ';start=%1$d')) . ', ' . ($start + $num_per_page * ($PageContiguous + 1)) . ', ' . $tmpMaxPages . ', ' . $num_per_page;
 
 		// Show the last number in the list. (prev page 1 ... 6 7 [8] 9 10 ... >15<  next page)
 		if ($start + $num_per_page * $PageContiguous < $tmpMaxPages)
-			$pageindex .= sprintf($base_link, $tmpMaxPages, $tmpMaxPages / $num_per_page + 1);
+			$pageIndex['last_page'] = array($tmpMaxPages, $tmpMaxPages / $num_per_page + 1);
 
 		// Show the "next page" link. (prev page 1 ... 6 7 [8] 9 10 ... 15 >next page<)
 		if ($start != $tmpMaxPages && $show_prevnext)
-			$pageindex .= sprintf($base_link, $start + $num_per_page, '<span class="next_page">' . $txt['next'] . ' &#187;</span>');
+			$pageIndex['next_page'] = $start + $num_per_page;
 	}
 
-	return $pageindex;
+	return $pageIndex;
 }
 
 /**

@@ -154,7 +154,7 @@ function template_error_log()
 				</tr>
 			</table>
 			<div class="pagesection floatleft">
-				&nbsp;&nbsp;', $txt['pages'], ': ', $context['page_index'], '
+				&nbsp;&nbsp;', $txt['pages'], ': ', template_page_index('page_index'), '
 			</div>';  
 
 	echo '

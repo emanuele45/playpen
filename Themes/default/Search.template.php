@@ -316,7 +316,7 @@ function template_results()
 		if (!empty($context['topics']))
 		echo'
 		<div class="pagesection">
-			<span>', $txt['pages'], ': ', $context['page_index'], '</span>
+			<span>', $txt['pages'], ': ', template_page_index('page_index'), '</span>
 		</div>';
 		else
 			echo '
@@ -401,7 +401,7 @@ function template_results()
 		if (!empty($context['topics']))
 		echo '
 		<div class="pagesection">
-			<span>', $txt['pages'], ': ', $context['page_index'], '</span>
+			<span>', $txt['pages'], ': ', template_page_index('page_index'), '</span>
 		</div>';
 
 		if (!empty($options['display_quick_mod']) && $options['display_quick_mod'] == 1 && !empty($context['topics']))
@@ -462,7 +462,7 @@ function template_results()
 			</h3>
 		</div>
 		<div class="pagesection">
-			<span>', $txt['pages'], ': ', $context['page_index'], '</span>
+			<span>', $txt['pages'], ': ', template_page_index('page_index'), '</span>
 		</div>';
 
 		if (empty($context['topics']))
@@ -520,7 +520,7 @@ function template_results()
 
 		echo '
 		<div class="pagesection">
-			<span>', $txt['pages'], ': ', $context['page_index'], '</span>
+			<span>', $txt['pages'], ': ', template_page_index('page_index'), '</span>
 		</div>';
 	}
 

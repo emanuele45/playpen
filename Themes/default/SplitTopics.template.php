@@ -95,7 +95,7 @@ function template_select()
 					', $txt['please_select_split'], '
 				</div>
 				<div class="pagesection">
-					<strong>', $txt['pages'], ':</strong> <span id="pageindex_not_selected">', $context['not_selected']['page_index'], '</span>
+					<strong>', $txt['pages'], ':</strong> <span id="pageindex_not_selected">', template_page_index('not_selected_page_index'), '</span>
 				</div>
 				<ul id="messages_not_selected" class="split_messages smalltext reset">';
 
@@ -128,7 +128,7 @@ function template_select()
 					', $txt['split_selected_posts_desc'], '
 				</div>
 				<div class="pagesection">
-					<strong>', $txt['pages'], ':</strong> <span id="pageindex_selected">', $context['selected']['page_index'], '</span>
+					<strong>', $txt['pages'], ':</strong> <span id="pageindex_selected">', template_page_index('selected_page_index'), '</span>
 				</div>
 				<ul id="messages_selected" class="split_messages smalltext reset">';
 
@@ -332,7 +332,7 @@ function template_merge()
 				<h3 class="catbg">', $txt['target_topic'], '</h3>
 			</div>
 			<div class="pagesection">
-				<strong>', $txt['pages'], ':</strong> ', $context['page_index'], '
+				<strong>', $txt['pages'], ':</strong> ', template_page_index('page_index'), '
 			</div>
 			<div class="windowbg2">
 				<span class="topslice"><span></span></span>
@@ -354,7 +354,7 @@ function template_merge()
 				<span class="botslice"><span></span></span>
 			</div>
 			<div class="pagesection">
-				<strong>', $txt['pages'], ':</strong> ', $context['page_index'], '
+				<strong>', $txt['pages'], ':</strong> ', template_page_index('page_index'), '
 			</div>
 		</div>
 	<br class="clear" />';

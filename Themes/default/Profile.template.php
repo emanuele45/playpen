@@ -338,7 +338,7 @@ function template_showPosts()
 			</h3>
 		</div>
 		<div class="pagesection">
-			<span>', $txt['pages'], ': ', $context['page_index'], '</span>
+			<span>', $txt['pages'], ': ', template_page_index('page_index'), '</span>
 		</div>';
 
 	// Button shortcuts
@@ -477,7 +477,7 @@ function template_showPosts()
 	// Show more page numbers.
 	echo '
 		<div class="pagesection" style="margin-bottom: 0;">
-			<span>', $txt['pages'], ': ', $context['page_index'], '</span>
+			<span>', $txt['pages'], ': ', template_page_index('page_index'), '</span>
 		</div>';
 }
 
