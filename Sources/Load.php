@@ -2221,9 +2221,7 @@ function censorText(&$text, $force = false)
  */
 function template_include($filename, $once = false)
 {
-	global $context, $settings, $options, $txt, $scripturl, $modSettings;
-	global $user_info, $boardurl, $boarddir, $sourcedir;
-	global $maintenance, $mtitle, $mmessage;
+	global $settings, $modSettings, $txt;
 	static $templates = array();
 
 	// We want to be able to figure out any errors...
@@ -2239,52 +2237,59 @@ function template_include($filename, $once = false)
 	// Are we going to use eval?
 	if (empty($modSettings['disableTemplateEval']))
 	{
-		$file_found = file_exists($filename) && eval('?' . '>' . rtrim(file_get_contents($filename))) !== false;
+		if (eval('?' . '>' . rtrim(file_get_contents($filename))) === false)
+			file_parse_error($filename);
+
 		$settings['current_include_filename'] = $filename;
 	}
-	else
-	{
-		$file_found = file_exists($filename);
 
-		if ($once && $file_found)
-			require_once($filename);
-		elseif ($file_found)
-			require($filename);
+	if ($once)
+		require_once($filename);
+	else
+		require($filename);
+}
+
+/**
+ * Show an error message if eval fails
+ *
+ * @param string $filename
+ */
+function file_parse_error($filename)
+{
+	global $context, $txt, $scripturl, $modSettings, $boarddir, $sourcedir;
+	global $maintenance, $mtitle, $mmessage;
+
+	ob_end_clean();
+	if (!empty($modSettings['enableCompressedOutput']))
+		@ob_start('ob_gzhandler');
+	else
+		ob_start();
+
+	if (isset($_GET['debug']) && !WIRELESS)
+		header('Content-Type: application/xhtml+xml; charset=' . (empty($context['character_set']) ? 'ISO-8859-1' : $context['character_set']));
+
+	// Don't cache error pages!!
+	header('Expires: Mon, 26 Jul 1997 05:00:00 GMT');
+	header('Last-Modified: ' . gmdate('D, d M Y H:i:s') . ' GMT');
+	header('Cache-Control: no-cache');
+
+	if (!isset($txt['template_parse_error']))
+	{
+		$txt['template_parse_error'] = 'Template Parse Error!';
+		$txt['template_parse_error_message'] = 'It seems something has gone sour on the forum with the template system.  This problem should only be temporary, so please come back later and try again.  If you continue to see this message, please contact the administrator.<br /><br />You can also try <a href="javascript:location.reload();">refreshing this page</a>.';
+		$txt['template_parse_error_details'] = 'There was a problem loading the <tt><strong>%1$s</strong></tt> template or language file.  Please check the syntax and try again - remember, single quotes (<tt>\'</tt>) often have to be escaped with a slash (<tt>\\</tt>).  To see more specific error information from PHP, try <a href="' . $boardurl . '%1$s" class="extern">accessing the file directly</a>.<br /><br />You may want to try to <a href="javascript:location.reload();">refresh this page</a> or <a href="' . $scripturl . '?theme=1">use the default theme</a>.';
 	}
 
-	if ($file_found !== true)
-	{
-		ob_end_clean();
-		if (!empty($modSettings['enableCompressedOutput']))
-			@ob_start('ob_gzhandler');
-		else
-			ob_start();
-
-		if (isset($_GET['debug']) && !WIRELESS)
-			header('Content-Type: application/xhtml+xml; charset=' . (empty($context['character_set']) ? 'ISO-8859-1' : $context['character_set']));
-
-		// Don't cache error pages!!
-		header('Expires: Mon, 26 Jul 1997 05:00:00 GMT');
-		header('Last-Modified: ' . gmdate('D, d M Y H:i:s') . ' GMT');
-		header('Cache-Control: no-cache');
-
-		if (!isset($txt['template_parse_error']))
-		{
-			$txt['template_parse_error'] = 'Template Parse Error!';
-			$txt['template_parse_error_message'] = 'It seems something has gone sour on the forum with the template system.  This problem should only be temporary, so please come back later and try again.  If you continue to see this message, please contact the administrator.<br /><br />You can also try <a href="javascript:location.reload();">refreshing this page</a>.';
-			$txt['template_parse_error_details'] = 'There was a problem loading the <tt><strong>%1$s</strong></tt> template or language file.  Please check the syntax and try again - remember, single quotes (<tt>\'</tt>) often have to be escaped with a slash (<tt>\\</tt>).  To see more specific error information from PHP, try <a href="' . $boardurl . '%1$s" class="extern">accessing the file directly</a>.<br /><br />You may want to try to <a href="javascript:location.reload();">refresh this page</a> or <a href="' . $scripturl . '?theme=1">use the default theme</a>.';
-		}
-
-		// First, let's get the doctype and language information out of the way.
-		echo '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+	// First, let's get the doctype and language information out of the way.
+	echo '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml"', !empty($context['right_to_left']) ? ' dir="rtl"' : '', '>
 	<head>';
-		if (isset($context['character_set']))
-			echo '
+	if (isset($context['character_set']))
+		echo '
 		<meta http-equiv="Content-Type" content="text/html; charset=', $context['character_set'], '" />';
 
-		if (!empty($maintenance) && !allowedTo('admin_forum'))
-			echo '
+	if (!empty($maintenance) && !allowedTo('admin_forum'))
+		echo '
 		<title>', $mtitle, '</title>
 	</head>
 	<body>
@@ -2292,8 +2297,8 @@ function template_include($filename, $once = false)
 		', $mmessage, '
 	</body>
 </html>';
-		elseif (!allowedTo('admin_forum'))
-			echo '
+	elseif (!allowedTo('admin_forum'))
+		echo '
 		<title>', $txt['template_parse_error'], '</title>
 	</head>
 	<body>
@@ -2301,114 +2306,113 @@ function template_include($filename, $once = false)
 		', $txt['template_parse_error_message'], '
 	</body>
 </html>';
-		else
-		{
-			require_once($sourcedir . '/Subs-Package.php');
+	else
+	{
+		require_once($sourcedir . '/Subs-Package.php');
 
-			$error = fetch_web_data($boardurl . strtr($filename, array($boarddir => '', strtr($boarddir, '\\', '/') => '')));
-			if (empty($error) && ini_get('track_errors'))
-				$error = $php_errormsg;
+		$error = fetch_web_data($boardurl . strtr($filename, array($boarddir => '', strtr($boarddir, '\\', '/') => '')));
+		if (empty($error) && ini_get('track_errors'))
+			$error = $php_errormsg;
 
-			$error = strtr($error, array('<b>' => '<strong>', '</b>' => '</strong>'));
+		$error = strtr($error, array('<b>' => '<strong>', '</b>' => '</strong>'));
 
-			echo '
+		echo '
 		<title>', $txt['template_parse_error'], '</title>
 	</head>
 	<body>
 		<h3>', $txt['template_parse_error'], '</h3>
 		', sprintf($txt['template_parse_error_details'], strtr($filename, array($boarddir => '', strtr($boarddir, '\\', '/') => '')));
 
-			if (!empty($error))
-				echo '
+		if (!empty($error))
+			echo '
 		<hr />
 
 		<div style="margin: 0 20px;"><tt>', strtr(strtr($error, array('<strong>' . $boarddir => '<strong>...', '<strong>' . strtr($boarddir, '\\', '/') => '<strong>...')), '\\', '/'), '</tt></div>';
 
-			// I know, I know... this is VERY COMPLICATED.  Still, it's good.
-			if (preg_match('~ <strong>(\d+)</strong><br( /)?' . '>$~i', $error, $match) != 0)
+		// I know, I know... this is VERY COMPLICATED.  Still, it's good.
+		if (preg_match('~ <strong>(\d+)</strong><br( /)?' . '>$~i', $error, $match) != 0)
+		{
+			$data = file($filename);
+			$data2 = highlight_php_code(implode('', $data));
+			$data2 = preg_split('~\<br( /)?\>~', $data2);
+
+			// Fix the PHP code stuff...
+			if (isBrowser('ie4') || isBrowser('ie5') || isBrowser('ie5.5'))
+				$data2 = str_replace("\t", '<pre style="display: inline;">' . "\t" . '</pre>', $data2);
+			elseif (!isBrowser('gecko'))
+				$data2 = str_replace("\t", '<span style="white-space: pre;">' . "\t" . '</span>', $data2);
+			else
+				$data2 = str_replace('<pre style="display: inline;">' . "\t" . '</pre>', "\t", $data2);
+
+			// Now we get to work around a bug in PHP where it doesn't escape <br />s!
+			$j = -1;
+			foreach ($data as $line)
 			{
-				$data = file($filename);
-				$data2 = highlight_php_code(implode('', $data));
-				$data2 = preg_split('~\<br( /)?\>~', $data2);
+				$j++;
 
-				// Fix the PHP code stuff...
-				if (isBrowser('ie4') || isBrowser('ie5') || isBrowser('ie5.5'))
-					$data2 = str_replace("\t", '<pre style="display: inline;">' . "\t" . '</pre>', $data2);
-				elseif (!isBrowser('gecko'))
-					$data2 = str_replace("\t", '<span style="white-space: pre;">' . "\t" . '</span>', $data2);
-				else
-					$data2 = str_replace('<pre style="display: inline;">' . "\t" . '</pre>', "\t", $data2);
+				if (substr_count($line, '<br />') == 0)
+					continue;
 
-				// Now we get to work around a bug in PHP where it doesn't escape <br />s!
-				$j = -1;
-				foreach ($data as $line)
+				$n = substr_count($line, '<br />');
+				for ($i = 0; $i < $n; $i++)
 				{
-					$j++;
-
-					if (substr_count($line, '<br />') == 0)
-						continue;
-
-					$n = substr_count($line, '<br />');
-					for ($i = 0; $i < $n; $i++)
-					{
-						$data2[$j] .= '&lt;br /&gt;' . $data2[$j + $i + 1];
-						unset($data2[$j + $i + 1]);
-					}
-					$j += $n;
+					$data2[$j] .= '&lt;br /&gt;' . $data2[$j + $i + 1];
+					unset($data2[$j + $i + 1]);
 				}
-				$data2 = array_values($data2);
-				array_unshift($data2, '');
-
-				echo '
-		<div style="margin: 2ex 20px; width: 96%; overflow: auto;"><pre style="margin: 0;">';
-
-				// Figure out what the color coding was before...
-				$line = max($match[1] - 9, 1);
-				$last_line = '';
-				for ($line2 = $line - 1; $line2 > 1; $line2--)
-					if (strpos($data2[$line2], '<') !== false)
-					{
-						if (preg_match('~(<[^/>]+>)[^<]*$~', $data2[$line2], $color_match) != 0)
-							$last_line = $color_match[1];
-						break;
-					}
-
-				// Show the relevant lines...
-				for ($n = min($match[1] + 4, count($data2) + 1); $line <= $n; $line++)
-				{
-					if ($line == $match[1])
-						echo '</pre><div style="background-color: #ffb0b5;"><pre style="margin: 0;">';
-
-					echo '<span style="color: black;">', sprintf('%' . strlen($n) . 's', $line), ':</span> ';
-					if (isset($data2[$line]) && $data2[$line] != '')
-						echo substr($data2[$line], 0, 2) == '</' ? preg_replace('~^</[^>]+>~', '', $data2[$line]) : $last_line . $data2[$line];
-
-					if (isset($data2[$line]) && preg_match('~(<[^/>]+>)[^<]*$~', $data2[$line], $color_match) != 0)
-					{
-						$last_line = $color_match[1];
-						echo '</', substr($last_line, 1, 4), '>';
-					}
-					elseif ($last_line != '' && strpos($data2[$line], '<') !== false)
-						$last_line = '';
-					elseif ($last_line != '' && $data2[$line] != '')
-						echo '</', substr($last_line, 1, 4), '>';
-
-					if ($line == $match[1])
-						echo '</pre></div><pre style="margin: 0;">';
-					else
-						echo "\n";
-				}
-
-				echo '</pre></div>';
+				$j += $n;
 			}
+			$data2 = array_values($data2);
+			array_unshift($data2, '');
 
 			echo '
-	</body>
-</html>';
+		<div style="margin: 2ex 20px; width: 96%; overflow: auto;"><pre style="margin: 0;">';
+
+			// Figure out what the color coding was before...
+			$line = max($match[1] - 9, 1);
+			$last_line = '';
+			for ($line2 = $line - 1; $line2 > 1; $line2--)
+				if (strpos($data2[$line2], '<') !== false)
+				{
+					if (preg_match('~(<[^/>]+>)[^<]*$~', $data2[$line2], $color_match) != 0)
+						$last_line = $color_match[1];
+					break;
+				}
+
+			// Show the relevant lines...
+			for ($n = min($match[1] + 4, count($data2) + 1); $line <= $n; $line++)
+			{
+				if ($line == $match[1])
+					echo '</pre><div style="background-color: #ffb0b5;"><pre style="margin: 0;">';
+
+				echo '<span style="color: black;">', sprintf('%' . strlen($n) . 's', $line), ':</span> ';
+				if (isset($data2[$line]) && $data2[$line] != '')
+					echo substr($data2[$line], 0, 2) == '</' ? preg_replace('~^</[^>]+>~', '', $data2[$line]) : $last_line . $data2[$line];
+
+				if (isset($data2[$line]) && preg_match('~(<[^/>]+>)[^<]*$~', $data2[$line], $color_match) != 0)
+				{
+					$last_line = $color_match[1];
+					echo '</', substr($last_line, 1, 4), '>';
+				}
+				elseif ($last_line != '' && strpos($data2[$line], '<') !== false)
+					$last_line = '';
+				elseif ($last_line != '' && $data2[$line] != '')
+					echo '</', substr($last_line, 1, 4), '>';
+
+				if ($line == $match[1])
+					echo '</pre></div><pre style="margin: 0;">';
+				else
+					echo "\n";
+			}
+
+			echo '</pre></div>';
 		}
 
-		die;
+		echo '
+	</body>
+</html>';
 	}
+
+	die;
 }
 
 /**

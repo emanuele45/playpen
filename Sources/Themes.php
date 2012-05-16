@@ -1598,9 +1598,15 @@ function WrapAction()
 	if (isset($settings['catch_action']['function']))
 	{
 		if (isset($settings['catch_action']['filename']))
-			template_include($sourcedir . '/' . $settings['catch_action']['filename'], true);
+		{
+			if (file_exists($sourcedir . '/' . $settings['catch_action']['filename']))
+				require_once($sourcedir . '/' . $settings['catch_action']['filename']);
+			elseif (!function_exists($settings['catch_action']['function']))
+				file_parse_error($sourcedir . '/' . $settings['catch_action']['filename']);
+		}
 
-		$settings['catch_action']['function']();
+		if (function_exists($settings['catch_action']['function']))
+			$settings['catch_action']['function']();
 	}
 	// And finally, the main sub template ;).
 	elseif (isset($settings['catch_action']['sub_template']))
