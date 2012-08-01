@@ -13,7 +13,6 @@ a:hover {
 
 /* Links that open in a new window. */
 a.new_win:link, a.new_win:visited {
-	color: #346;
 	text-decoration: none;
 }
 a.new_win:hover {
@@ -21,7 +20,7 @@ a.new_win:hover {
 }
 
 html {
-	background: #3e5a78;
+	background: #3e5a70;
 }
 /* Set a font-size that will look the same in all browsers. */
 body {
@@ -828,7 +827,7 @@ div.cat_bar, div.title_bar,div.title_barIC {
 	border-radius: 5px;
 }
 div.cat_bar {
-	background: #557ea0;
+	background: #3e5a70;
 	border-bottom: 1px solid #777;
 	padding: 0;
 	border-radius: 6px 6px 0 0;
@@ -1003,7 +1002,7 @@ img.sort {
 }
 /* Level 1 active button. */
 .dropmenu li a.active {
-	background: orange;
+	background: #df0c0f;
 	color: #fff;
 	font-weight: bold;
 	border: 1px solid #f49a3a;
@@ -1261,7 +1260,7 @@ div#admin_menu {
 }
 /* the active one */
 .buttonlist ul li a.active {
-	background: #557ea0;
+	background: #3e5a70;
 	color: #fff;
 	font-weight: bold;
 	border-radius: 3px;
@@ -1362,7 +1361,7 @@ div#admin_menu {
 }
 #search_form .button_submit:hover {
 	background: #fff url(../images/theme/upper_section.png) 0 45% repeat-x;
-	color: #a85400;
+	color: #830;
 	text-decoration: none;
 }
 /* The logo and slogan. */
@@ -1381,7 +1380,7 @@ h1.forumtitle {
 	font-weight: normal;
 }
 h1.forumtitle a {
-	color: #a85400;
+	color: #830;
 	text-shadow: -1px -1px 0 rgba(0,0,0,0.5), 1px 1px 0 #fff;
 }
 /* Float these items to the right */
@@ -1533,7 +1532,7 @@ img#upshrink {
 	margin: 4em 0 0 0;
 	padding: 0;
 	overflow: auto;
-	background: #3e5a78;
+	background: #3e5a70;
 	border-top: 3px solid #bbb;
 
 }
