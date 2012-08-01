@@ -176,9 +176,33 @@ function template_main()
 					</td>
 					<td class="lastpost">';
 
+					/* The board's and children's 'last_post's have:
+					time, timestamp (a number that represents the time.), id (of the post), topic (topic id.),
+					link, href, subject, start (where they should go for the first unread post.),
+					and member. (which has id, name, link, href, username in it.) */
+					$this_last_post['last_post_message'] = sprintf($txt['last_post_message'], $this_last_post['member']['link'], $this_last_post['link'], $this_last_post['time']);
+
+				/*
+					$board['last_post']['last_post_message'] uses the text string $txt['last_post_message']
+					If you want to change the appearance of this part there are two ways:
+					1) use str_replace to replace pieces of the string
+							for example if you want to remove the <strong> from the string you can use:
+							echo '
+								<p>', str_replace(array('<strong>', '</strong>'), array('', ''), $board['last_post']['last_post_message']), '</p>';
+							or if you want to include every bit into a list you can do:
+							echo '
+								<ul>', str_replace(array('<strong>', '</strong>'), array('<li>', ''), $board['last_post']['last_post_message']), '</p>';
+							
+					2) create a ThemeStrings.english.php, and define a new $txt['last_post_message'], 
+							this string can use 3 parameters:
+								* %1$s - the link to the user's profile (in the form '<a href="http://domain.tld/index.php?action=profile;u=1">name</a>')
+								* %2$s - the link to the first unread post  (in the form '<a href="http://domain.tld/index.php?topic=1.msg1#new">subject</a>')
+								* %3$s - the date and time of the last post
+				*/
+
 				if (!empty($board['last_post']['id']))
 					echo '
-						<p>', $board['last_post']['last_post_message'], '</p>';
+						<p>', sprintf($txt['last_post_message'], $this_last_post['member']['link'], $this_last_post['link'], $this_last_post['time']), '</p>';
 				echo '
 					</td>
 				</tr>';
