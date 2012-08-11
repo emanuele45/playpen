@@ -3439,7 +3439,8 @@ function template_upgrade_above()
 		<title>', $txt['upgrade_upgrade_utility'], '</title>
 		<link rel="stylesheet" type="text/css" href="', $settings['default_theme_url'], '/css/index.css?alp21" />
 		<link rel="stylesheet" type="text/css" href="', $settings['default_theme_url'], '/css/install.css?alp21" />
-				<script type="text/javascript" src="', $settings['default_theme_url'], '/scripts/script.js"></script>
+		<style type="text/css">#wrapper, .frame {width: 90%;}</style>
+		<script type="text/javascript" src="', $settings['default_theme_url'], '/scripts/script.js"></script>
 		<script type="text/javascript"><!-- // --><![CDATA[
 			var smf_scripturl = \'', $upgradeurl, '\';
 			var smf_charset = \'', (empty($modSettings['global_character_set']) ? (empty($txt['lang_character_set']) ? 'ISO-8859-1' : $txt['lang_character_set']) : $modSettings['global_character_set']), '\';
@@ -3465,18 +3466,19 @@ function template_upgrade_above()
 		// ]]></script>
 	</head>
 	<body>
-	<div id="header"><div class="frame">
-		<div id="top_section">
+	<div id="header">
+		<div class="frame">
 			<h1 class="forumtitle">', $txt['upgrade_upgrade_utility'], '</h1>
 			<img id="smflogo" src="Themes/default/images/smflogo.png" alt="Simple Machines Forum" title="Simple Machines Forum" />
 		</div>
-		<div id="upper_section" class="middletext flow_hidden">
-			<div class="user"></div>
-			<div class="news normaltext">
+	</div>
+	<div id="wrapper">
+		<div id="upper_section">
+			<div id="inner_section">
+				<div class="user"></div>
 			</div>
 		</div>
-	</div></div>
-	<div id="content_section"><div class="frame">
+		<div id="content_section"><div class="frame">
 		<div id="main_content_section">
 			<div id="main-steps">
 				<h2>', $txt['upgrade_progress'], '</h2>
@@ -3489,7 +3491,7 @@ function template_upgrade_above()
 	echo '
 					</ul>
 			</div>
-			<div style="float: left; width: 40%;">
+			<div id="progress_bar" style="float: left; width: 40%;">
 				<div style="font-size: 8pt; height: 12pt; border: 1px solid black; background-color: white; width: 50%; margin: auto;">
 					<div id="overall_text" style="color: #000; position: absolute; margin-left: -5em;">', $upcontext['overall_percent'], '%</div>
 					<div id="overall_progress" style="width: ', $upcontext['overall_percent'], '%; height: 12pt; z-index: 1; background-color: lime;">&nbsp;</div>
@@ -3561,13 +3563,14 @@ function template_upgrade_below()
 									<input type="submit" id="skip" name="skip" value="', $txt['upgrade_skip'], '" onclick="dontSubmit = true; document.getElementById(\'contbutt\').disabled = \'disabled\'; return true;" class="button_submit" />';
 
 	echo '
-								</div>
-							</form>
-						</div>
+									</div>
+								</form>
+							</div>
+					</div>
 				</div>
 			</div>
-		</div>
-	</div></div>
+		</div></div>
+	</div>
 	<div id="footer_section"><div class="frame" style="height: 40px;">
 		<div class="smalltext"><a href="http://www.simplemachines.org/" title="Simple Machines Forum" target="_blank" class="new_win">SMF &copy;2011, Simple Machines</a></div>
 	</div></div>
