@@ -2648,7 +2648,15 @@ function cache_put_data($key, $value, $ttl = 120)
 	$key = md5($boardurl . filemtime($sourcedir . '/Load.php')) . '-SMF-' . $key;
 	$value = $value === null ? null : serialize($value);
 
-	$function = 'smf_put_' . $cache_accelerator;
+	if (strpos($cache_accelerator, ':') !== false)
+	{
+		list($file, $function) = explode(':', $cache_accelerator);
+		require_once($sourcedir . '/' . $file);
+		$function = 'smf_put_' . $function;
+	}
+	else
+		$function = 'smf_put_' . !empty($cache_accelerator) ? $cache_accelerator : 'filecache';
+
 	if ($function($key, $value, $ttl) === false)
 		smf_put_filecache($key, $value, $ttl);
 
@@ -2806,9 +2814,17 @@ function cache_get_data($key, $ttl = 120)
 
 	$key = md5($boardurl . filemtime($sourcedir . '/Load.php')) . '-SMF-' . $key;
 
-	$function = 'smf_get_' . $cache_accelerator;
+	if (strpos($cache_accelerator, ':') !== false)
+	{
+		list($file, $function) = explode(':', $cache_accelerator);
+		require_once($sourcedir . '/' . $file);
+		$function = 'smf_get_' . $function;
+	}
+	else
+		$function = 'smf_get_' . !empty($cache_accelerator) ? $cache_accelerator : 'filecache';
+
 	$value = $function($key, $ttl);
-	if ($function($key, $ttl) === null)
+	if ($value === null)
 		$value = smf_get_filecache($key, $ttl);
 
 	if (isset($db_show_debug) && $db_show_debug === true)
@@ -2818,21 +2834,24 @@ function cache_get_data($key, $ttl = 120)
 	}
 
 	return empty($value) ? null : @unserialize($value);
+}
 
 function smf_get_memcache($key, $ttl)
 {
-			// Okay, let's go for it memcached!
-			if ((function_exists('memcache_get') || function_exists('memcached_get')) && isset($modSettings['cache_memcached']) && trim($modSettings['cache_memcached']) != '')
-			{
-				// Not connected yet?
-				if (empty($memcached))
-					get_memcached_server();
-				if (!$memcached)
-					return null;
+	// Okay, let's go for it memcached!
+	if ((function_exists('memcache_get') || function_exists('memcached_get')) && isset($modSettings['cache_memcached']) && trim($modSettings['cache_memcached']) != '')
+	{
+		// Not connected yet?
+		if (empty($memcached))
+			get_memcached_server();
+		if (!$memcached)
+			return null;
 
-				$value = (function_exists('memcache_get')) ? memcache_get($cache['connection'], $key) : memcached_get($cache['connection'], $key);
-			}
-			break;
+		return (function_exists('memcache_get')) ? memcache_get($cache['connection'], $key) : memcached_get($cache['connection'], $key);
+	}
+	return null;
+}
+
 function smf_get_eaccelerator($key, $ttl)
 {
 	// Again, eAccelerator.
