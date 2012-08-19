@@ -331,10 +331,14 @@ function DownloadLanguage()
 				fclose($fp);
 
 				// Find the version.
-				if (preg_match('~(?://|/\*)\s*Version:\s+(.+?);\s*' . preg_quote($name, '~') . '(?:[\s]{2}|\*/)~i', $header, $match) == 1)
-				{
+				if (preg_match('~(?:\*)\s*@Version\s+(.+?);\s*' . preg_quote($name, '~') . '(?:[\s]{2}|\*/)~i', $header, $match) == 1)
+					$context_data['cur_version'] = $match[1];
+				// Maybe the old notation
+				elseif (preg_match('~(?://|/\*)\s*Version:\s+(.+?);\s*' . preg_quote($name, '~') . '(?:[\s]{2}|\*/)~i', $header, $match) == 1)
 					$context_data['cur_version'] = $match[1];
 
+				if (!empty($context_data['cur_version']))
+				{
 					// How does this compare?
 					if ($context_data['cur_version'] == $context_data['version'])
 						$context_data['version_compare'] = 'same';

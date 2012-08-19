@@ -999,10 +999,15 @@ function WelcomeLogin()
 	elseif (!isset($_GET['skiplang']))
 	{
 		$temp = substr(@implode('', @file($boarddir . '/Themes/default/languages/index.' . $upcontext['language'] . '.php')), 0, 4096);
-		preg_match('~(?://|/\*)\s*Version:\s+(.+?);\s*index(?:[\s]{2}|\*/)~i', $temp, $match);
+		preg_match('~(?:\*)\s*@Version:\s+(.+?);\s*index(?:[\s]{2}|\*/)~i', $temp, $match);
 
 		if (empty($match[1]) || $match[1] != SMF_LANG_VERSION)
-			return throw_error('The upgrader found some old or outdated language files, for the forum default language, ' . $upcontext['language'] . '.<br /><br />Please make certain you uploaded the new versions of all the files included in the package, even the theme and language files for the default theme.<br />&nbsp;&nbsp;&nbsp;[<a href="' . $upgradeurl . '?skiplang">SKIP</a>] [<a href="' . $upgradeurl . '?lang=english">Try English</a>]');
+		{
+			// Try with the old notation
+			preg_match('~(?://|/\*)\s*Version\s+(.+?);\s*index(?:[\s]{2}|\*/)~i', $temp, $match);
+			if (empty($match[1]) || $match[1] != SMF_LANG_VERSION)
+				return throw_error('The upgrader found some old or outdated language files, for the forum default language, ' . $upcontext['language'] . '.<br /><br />Please make certain you uploaded the new versions of all the files included in the package, even the theme and language files for the default theme.<br />&nbsp;&nbsp;&nbsp;[<a href="' . $upgradeurl . '?skiplang">SKIP</a>] [<a href="' . $upgradeurl . '?lang=english">Try English</a>]');
+		}
 	}
 
 	// This needs to exist!
@@ -1192,10 +1197,16 @@ function checkLogin()
 			{
 				$user_language = basename($user_language, '.lng');
 				$temp = substr(@implode('', @file($boarddir . '/Themes/default/languages/index.' . $user_language . '.php')), 0, 4096);
-				preg_match('~(?://|/\*)\s*Version:\s+(.+?);\s*index(?:[\s]{2}|\*/)~i', $temp, $match);
+				preg_match('~(?:\*)\s*@Version:\s+(.+?);\s*index(?:[\s]{2}|\*/)~i', $temp, $match);
 
+				//Try with the old notation
 				if (empty($match[1]) || $match[1] != SMF_LANG_VERSION)
-					$upcontext['upgrade_options_warning'] = 'The language files for your selected language, ' . $user_language . ', have not been updated to the latest version. Upgrade will continue with the forum default, ' . $upcontext['language'] . '.';
+				{
+					preg_match('~(?://|/\*)\s*Version\s+(.+?);\s*index(?:[\s]{2}|\*/)~i', $temp, $match);
+
+					if (empty($match[1]) || $match[1] != SMF_LANG_VERSION)
+						$upcontext['upgrade_options_warning'] = 'The language files for your selected language, ' . $user_language . ', have not been updated to the latest version. Upgrade will continue with the forum default, ' . $upcontext['language'] . '.';
+				}
 				elseif (!file_exists($boarddir . '/Themes/default/languages/Install.' . basename($user_language, '.lng') . '.php'))
 					$upcontext['upgrade_options_warning'] = 'The language files for your selected language, ' . $user_language . ', have not been uploaded/updated as the &quot;Install&quot; language file is missing. Upgrade will continue with the forum default, ' . $upcontext['language'] . '.';
 				else
@@ -3075,10 +3086,16 @@ Usage: /path/to/php -f ' . basename(__FILE__) . ' -- [OPTION]...
 	else
 	{
 		$temp = substr(@implode('', @file($boarddir . '/Themes/default/languages/index.' . $upcontext['language'] . '.php')), 0, 4096);
-		preg_match('~(?://|/\*)\s*Version:\s+(.+?);\s*index(?:[\s]{2}|\*/)~i', $temp, $match);
+		preg_match('~(?:\*)\s*@Version:\s+(.+?);\s*index(?:[\s]{2}|\*/)~i', $temp, $match);
 
+		//Try with the old notation
 		if (empty($match[1]) || $match[1] != SMF_LANG_VERSION)
-			print_error('Error: Language files out of date.', true);
+		{
+			preg_match('~(?://|/\*)\s*Version\s+(.+?);\s*index(?:[\s]{2}|\*/)~i', $temp, $match);
+
+			if (empty($match[1]) || $match[1] != SMF_LANG_VERSION)
+				print_error('Error: Language files out of date.', true);
+		}
 		if (!file_exists($boarddir . '/Themes/default/languages/Install.' . $upcontext['language'] . '.php'))
 			print_error('Error: Install language is missing for selected language.', true);
 
