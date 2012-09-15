@@ -2287,7 +2287,7 @@ ul.quickbuttons li.inline_mod_check {
 }
 .quickbuttons li.post_options ul {
 	position: absolute;
-	top: 2.1em;
+	top: 2em;
 	right: -1px;
 	z-index: -1;
 	min-width: 10em;

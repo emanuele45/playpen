@@ -1,6 +1,7 @@
 $(document).ready(function() {
 	// menu drop downs
 	$('ul.dropmenu').superfish();
+	$('ul.quickbuttons').superfish();
 	
 	// tooltips
 	$('.preview').SMFtooltip();
