@@ -158,7 +158,6 @@ function template_main()
 						<a href="', $scripturl, '?action=moderate;area=postmod;sa=', ($board['unapproved_topics'] > 0 ? 'topics' : 'posts'), ';brd=', $board['id'], ';', $context['session_var'], '=', $context['session_id'], '" title="', sprintf($txt['unapproved_posts'], $board['unapproved_topics'], $board['unapproved_posts']), '" class="moderation_link">(!)</a>';
 
 				echo '
-
 						<p>', $board['description'] , '</p>';
 
 				// Show the "Moderators: ". Each has name, href, link, and id. (but we're gonna use link_moderators.)
@@ -171,7 +170,7 @@ function template_main()
 					</td>
 					<td class="windowbg stats">
 						<p>', comma_format($board['posts']), ' ', $board['is_redirect'] ? $txt['redirects'] : $txt['posts'], '
-						', $board['is_redirect'] ? '' : '<br /> '.comma_format($board['topics']) . ' ' . $txt['board_topics'], '
+						', $board['is_redirect'] ? '' : '<br /> ' . comma_format($board['topics']) . ' ' . $txt['board_topics'], '
 						</p>
 					</td>
 					<td class="lastpost">';
@@ -180,7 +179,6 @@ function template_main()
 					time, timestamp (a number that represents the time.), id (of the post), topic (topic id.),
 					link, href, subject, start (where they should go for the first unread post.),
 					and member. (which has id, name, link, href, username in it.) */
-					$this_last_post['last_post_message'] = sprintf($txt['last_post_message'], $this_last_post['member']['link'], $this_last_post['link'], $this_last_post['time']);
 
 				/*
 					$board['last_post']['last_post_message'] uses the text string $txt['last_post_message']
@@ -191,7 +189,7 @@ function template_main()
 								<p>', str_replace(array('<strong>', '</strong>'), array('', ''), $board['last_post']['last_post_message']), '</p>';
 							or if you want to include every bit into a list you can do:
 							echo '
-								<ul>', str_replace(array('<strong>', '</strong>'), array('<li>', ''), $board['last_post']['last_post_message']), '</p>';
+								<ul>', str_replace(array('<strong>', '</strong>'), array('<li>', ''), $board['last_post']['last_post_message']), '</li></ul>';
 							
 					2) create a ThemeStrings.english.php, and define a new $txt['last_post_message'], 
 							this string can use 3 parameters:
@@ -202,7 +200,7 @@ function template_main()
 
 				if (!empty($board['last_post']['id']))
 					echo '
-						<p>', sprintf($txt['last_post_message'], $this_last_post['member']['link'], $this_last_post['link'], $this_last_post['time']), '</p>';
+						<p>', sprintf($txt['last_post_message'], $board['last_post']['member']['link'], $board['last_post']['link'], $board['last_post']['time']), '</p>';
 				echo '
 					</td>
 				</tr>';
