@@ -409,6 +409,10 @@ em {
 .bbc_list {
 	text-align: left;
 }
+.bbc_list li {
+	list-style: inside;
+	list-style-type: inherit;
+}
 .bbc_tt {
 	font-family: "dejavu sans mono", "monaco", "lucida console", "courier new", monospace;
 }
@@ -1223,6 +1227,13 @@ div#admin_menu {
 	border-top: none;
 	border-radius: 0 0 5px 5px;
 	line-height: 1.8em;
+}
+
+li#collapse_button {
+	float: right;
+	position: absolute;
+	top: 0;
+	right: 0;
 }
 
 /* Styles for the standard button lists.
