@@ -401,7 +401,7 @@ body#chrome  #quick_search .button_submit {
 	width: 30%;
 	padding-left: 6px;
 }
-#admin_main_section .windowbg {
+#admin_main_section .windowbg,  #modcenter .windowbg {
 	padding: 6px 0;
 	border: 1px solid #ccc;
 	border-top: 1px solid #bbb;
