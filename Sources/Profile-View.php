@@ -501,10 +501,35 @@ function showPosts($memID)
 
 	// Clean up after posts that cannot be deleted and quoted.
 	$quote_enabled = empty($modSettings['disabledBBC']) || !in_array('quote', explode(',', $modSettings['disabledBBC']));
-	foreach ($context['posts'] as $counter => $dummy)
+	foreach ($context['posts'] as $counter => $post)
 	{
 		$context['posts'][$counter]['can_delete'] &= $context['posts'][$counter]['delete_possible'];
 		$context['posts'][$counter]['can_quote'] = $context['posts'][$counter]['can_reply'] && $quote_enabled;
+
+		// If they *can* reply?
+		if ($post['can_reply'])
+			$context['posts'][$counter]['buttons']['reply'] = array(
+				'url' => $scripturl . '?action=post;topic=' . $post['topic'] . '.' . $post['start'],
+			);
+
+		// If they *can* quote?
+		if ($context['posts'][$counter]['can_quote'])
+			$context['posts'][$counter]['buttons']['quote'] = array(
+				'url' => $scripturl . '?action=post;topic=' . $post['topic'] . '.' . $post['start'] . ';quote=' . $post['id'],
+			);
+
+		// Can we request notification of topics?
+		if ($post['can_mark_notify'])
+			$context['posts'][$counter]['buttons']['notify'] = array(
+				'url' => $scripturl . '?action=notify;topic=' . $post['topic'] . '.' . $post['start'] . ';quote=' . $post['id'],
+			);
+
+		// How about... even... remove it entirely?!
+		if ($post['can_delete'])
+			$context['posts'][$counter]['buttons']['remove'] = array(
+				'url' => $scripturl . '?action=deletemsg;msg=' . $post['id'] . ';topic=' . $post['topic'] . ';profile;u=' . $context['member']['id'] . ';start=' . $context['start'] . ';' . $context['session_var'] . '=' . $context['session_id'],
+				'custom' => 'onclick="return confirm(\'' . $txt['remove_message'] . '?\');"',
+			);
 	}
 }
 

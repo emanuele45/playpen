@@ -614,15 +614,16 @@ function template_quickbuttons_strip($button_strip, $direction = '', $strip_opti
 	if (!is_array($strip_options))
 		$strip_options = array();
 
-	// At least, do we have this group of buttons?
-	if (!isset($context[$button_strip]))
+	if (empty($button_strip))
 		return;
 
 	// Create the buttons...
 	$buttons = array();
 	$more_buttons = array();
-	foreach ($context[$button_strip] as $key => $value)
+	foreach ($button_strip as $key => $value)
 	{
+		if (empty($value))
+			continue;
 		if ($key == 'display_quick_mod')
 		{
 			$display_quick_mod = $value;

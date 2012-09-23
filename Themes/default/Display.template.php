@@ -538,7 +538,7 @@ function template_main()
 		}
 
 		echo '
-						</div>', template_quickbuttons_strip('display_buttons'), '
+						</div>', template_quickbuttons_strip($context['display_buttons']), '
 						<div class="moderatorbar">';
 
 		// Are there any custom profile fields for above the signature?

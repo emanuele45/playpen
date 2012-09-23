@@ -345,12 +345,6 @@ function template_showPosts()
 			<div class="pagelinks">' . $context['page_index'] . '</div>
 		</div>' : '';
 
-	// Button shortcuts
-	$quote_button = create_button('quote.png', 'reply_quote', 'quote', 'class="centericon"');
-	$reply_button = create_button('reply_sm.png', 'reply', 'reply', 'class="centericon"');
-	$remove_button = create_button('delete.png', 'remove_message', 'remove', 'class="centericon"');
-	$notify_button = create_button('notify_sm.png', 'notify_replies', 'notify', 'class="centericon"');
-
 	// Are we displaying posts or attachments?
 	if (!isset($context['attachments']))
 	{
@@ -380,31 +374,7 @@ function template_showPosts()
 			if ($post['can_reply'] || $post['can_mark_notify'] || $post['can_delete'])
 				echo '
 				<div class="floatright">
-					<ul class="reset smalltext quickbuttons">';
-
-			// If they *can* reply?
-			if ($post['can_reply'])
-				echo '
-						<li><a href="', $scripturl, '?action=post;topic=', $post['topic'], '.', $post['start'], '" class="reply_button"><span>', $txt['reply'], '</span></a></li>';
-
-			// If they *can* quote?
-			if ($post['can_quote'])
-				echo '
-						<li><a href="', $scripturl . '?action=post;topic=', $post['topic'], '.', $post['start'], ';quote=', $post['id'], '" class="quote_button"><span>', $txt['quote'], '</span></a></li>';
-
-			// Can we request notification of topics?
-			if ($post['can_mark_notify'])
-				echo '
-						<li><a href="', $scripturl, '?action=notify;topic=', $post['topic'], '.', $post['start'], '" class="notify_button"><span>', $txt['notify'], '</span></a></li>';
-
-			// How about... even... remove it entirely?!
-			if ($post['can_delete'])
-				echo '
-						<li><a href="', $scripturl, '?action=deletemsg;msg=', $post['id'], ';topic=', $post['topic'], ';profile;u=', $context['member']['id'], ';start=', $context['start'], ';', $context['session_var'], '=', $context['session_id'], '" onclick="return confirm(\'', $txt['remove_message'], '?\');" class="remove_button"><span>', $txt['remove'], '</span></a></li>';
-
-			if ($post['can_reply'] || $post['can_mark_notify'] || $post['can_delete'])
-				echo '
-					</ul>
+					', template_quickbuttons_strip($post['buttons']), '
 				</div>';
 
 			echo '
