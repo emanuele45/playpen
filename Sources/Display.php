@@ -1352,7 +1352,10 @@ function prepareDisplayContext($reset = false)
 
 	// Show a checkbox for quick moderation?
 	if (!empty($options['display_quick_mod']) && $options['display_quick_mod'] == 1 && $output['can_remove'])
-		$context['display_buttons']['display_quick_mod'] = $output['id'];
+		$context['display_buttons']['display_quick_mod'] = array(
+			'id' => 'in_topic_mod_check_' . $output['id'],
+			'custom' => 'style="display: none;"',
+		);
 
 	call_integration_hook('integrate_prepare_display_context', array(&$output, &$message));
 

@@ -334,7 +334,7 @@ function template_main()
 
 		// Stuff for the staff to wallop them with.
 		echo '
-										<li><hr /></li>';
+										<li class="clear"><hr /></li>';
 
 		// Maybe they want to report this post to the moderator(s)?
 		if ($context['can_report_moderator'])

@@ -276,7 +276,7 @@ function template_folder()
 
 				// Stuff for the staff to wallop them with.
 				echo '
-						<li><hr /></li>';
+						<li class="clear"><hr /></li>';
 
 				if ($message['can_report'])
 					echo '
@@ -417,37 +417,6 @@ function template_folder()
 
 			echo '
 				</div>
-				<ul class="reset smalltext quickbuttons">';
-
-			// Show reply buttons if you have the permission to send PMs.
-			if ($context['can_send_pm'])
-			{
-				// You can't really reply if the member is gone.
-				if (!$message['member']['is_guest'])
-				{
-					// Is there than more than one recipient you can reply to?
-					if ($message['number_recipients'] > 1 && $context['display_mode'] != 2)
-						echo '
-					<li><a href="', $scripturl, '?action=pm;sa=send;f=', $context['folder'], $context['current_label_id'] != -1 ? ';l=' . $context['current_label_id'] : '', ';pmsg=', $message['id'], ';quote;u=all" class="reply_all_button">', $txt['reply_to_all'], '</a></li>';
-
-					echo '
-					<li><a href="', $scripturl, '?action=pm;sa=send;f=', $context['folder'], $context['current_label_id'] != -1 ? ';l=' . $context['current_label_id'] : '', ';pmsg=', $message['id'], ';u=', $message['member']['id'], '" class="reply_button">', $txt['reply'], '</a></li>
-					<li><a href="', $scripturl, '?action=pm;sa=send;f=', $context['folder'], $context['current_label_id'] != -1 ? ';l=' . $context['current_label_id'] : '', ';pmsg=', $message['id'], ';quote', $context['folder'] == 'sent' ? '' : ';u=' . $message['member']['id'], '" class="quote_button">', $txt['quote'], '</a></li>';
-				}
-				// This is for "forwarding" - even if the member is gone.
-				else
-					echo '
-					<li><a href="', $scripturl, '?action=pm;sa=send;f=', $context['folder'], $context['current_label_id'] != -1 ? ';l=' . $context['current_label_id'] : '', ';pmsg=', $message['id'], ';quote" class="quote_button">', $txt['reply_quote'], '</a></li>';
-			}
-			echo '
-					<li><a href="', $scripturl, '?action=pm;sa=pmactions;pm_actions[', $message['id'], ']=delete;f=', $context['folder'], ';start=', $context['start'], $context['current_label_id'] != -1 ? ';l=' . $context['current_label_id'] : '', ';', $context['session_var'], '=', $context['session_id'], '" onclick="return confirm(\'', addslashes($txt['remove_message']), '?\');" class="remove_button">', $txt['delete'], '</a></li>';
-
-			if (empty($context['display_mode']))
-				echo '
-					<li class="inline_mod_check"><input type="checkbox" name="pms[]" id="deletedisplay', $message['id'], '" value="', $message['id'], '" onclick="document.getElementById(\'deletelisting', $message['id'], '\').checked = this.checked;" class="input_check" /></li>';
-
-			echo '
-				</ul>
 			</div>
 			<div class="post">
 				<div class="inner" id="msg_', $message['id'], '"', '>', $message['body'], '</div>';
@@ -476,21 +445,16 @@ function template_folder()
 				</div>';
 			}
 
-			// Show the member's signature?
-			if (!empty($message['member']['signature']) && empty($options['show_no_signatures']) && $context['signature_enabled'])
-				echo '
-				<div class="signature">', $message['member']['signature'], '</div>';
-
+			echo '
+				<div class="labels righttext flow_auto">', template_quickbuttons_strip($context['pm_buttons']);
 			// Add an extra line at the bottom if we have labels enabled.
 			if ($context['folder'] != 'sent' && !empty($context['currently_using_labels']) && $context['display_mode'] != 2)
 			{
-				echo '
-				<div class="labels righttext flow_auto">';
 				// Add the label drop down box.
 				if (!empty($context['currently_using_labels']))
 				{
 					echo '
-					<select name="pm_actions[', $message['id'], ']" onchange="if (this.options[this.selectedIndex].value) form.submit();">
+					<select class="quickbuttons" name="pm_actions[', $message['id'], ']" onchange="if (this.options[this.selectedIndex].value) form.submit();">
 						<option value="">', $txt['pm_msg_label_title'], ':</option>
 						<option value="" disabled="disabled">---------------</option>';
 
@@ -519,9 +483,15 @@ function template_folder()
 						<input type="submit" value="', $txt['pm_apply'], '" class="button_submit" style="float: none" />
 					</noscript>';
 				}
-				echo '
-				</div>';
 			}
+
+			echo '
+				</div>';
+
+			// Show the member's signature?
+			if (!empty($message['member']['signature']) && empty($options['show_no_signatures']) && $context['signature_enabled'])
+				echo '
+				<div class="signature">', $message['member']['signature'], '</div>';
 
 			echo '
 			</div>

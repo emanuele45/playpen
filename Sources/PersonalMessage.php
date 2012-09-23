@@ -995,6 +995,52 @@ function prepareMessageContext($type = 'subject', $reset = false)
 		'can_see_ip' => allowedTo('moderate_forum') || ($message['id_member'] == $user_info['id'] && !empty($user_info['id'])),
 	);
 
+	$context['pm_buttons'] = array();
+	// Show reply buttons if you have the permission to send PMs.
+	if ($context['can_send_pm'])
+	{
+		// You can't really reply if the member is gone.
+		if (!$output['member']['is_guest'])
+		{
+			// Is there than more than one recipient you can reply to?
+			if ($output['number_recipients'] > 1 && $context['display_mode'] != 2)
+				$context['pm_buttons']['reply_all'] = array(
+					'text' => 'reply_to_all',
+					'url' => $scripturl . '?action=pm;sa=send;f=' . $context['folder'] . ($context['current_label_id'] != -1 ? ';l=' . $context['current_label_id'] : '') . ';pmsg=' . $output['id'] . ';quote;u=all',
+				);
+
+				$context['pm_buttons'] += array(
+					'reply' => array(
+						'url' => $scripturl . '?action=pm;sa=send;f=' . $context['folder'] . ($context['current_label_id'] != -1 ? ';l=' . $context['current_label_id'] : '') . ';pmsg=' . $output['id'] . ';u=' . $output['member']['id'],
+					),
+					'quote' => array(
+						'url' => $scripturl . '?action=pm;sa=send;f=' . $context['folder'] . ($context['current_label_id'] != -1 ? ';l=' . $context['current_label_id'] : '') . ';pmsg=' . $output['id'] . ';quote' . ($context['folder'] == 'sent' ? '' : ';u=' . $output['member']['id']),
+					),
+				);
+		}
+		// This is for "forwarding" - even if the member is gone.
+		else
+				$context['pm_buttons']['quote'] = array(
+					'text' => 'reply_quote',
+					'url' => $scripturl . '?action=pm;sa=send;f=' . $context['folder'] . ($context['current_label_id'] != -1 ? ';l=' . $context['current_label_id'] : '') . ';pmsg=' . $output['id'] . ';quote',
+				);
+	}
+	$context['pm_buttons']['remove'] = array(
+		'text' => 'delete',
+		'url' => $scripturl . '?action=pm;sa=pmactions;pm_actions[' . $output['id'] . ']=delete;f=' . $context['folder'] . ';start=' . $context['start'] . ($context['current_label_id'] != -1 ? ';l=' . $context['current_label_id'] : '') . ';' . $context['session_var'] . '=' . $context['session_id'],
+		'custom' => 'onclick="return confirm(\'' . addslashes($txt['remove_message']) . '?\');"',
+	);
+
+	if (empty($context['display_mode']))
+		$context['pm_buttons']['display_quick_mod'] = array(
+			'input' => array(
+				'name' => 'pms[]',
+				'value' => 'value="' . $output['id'],
+				'id' => 'deletedisplay' . $output['id'],
+				'custom' => 'onclick="document.getElementById(\'deletelisting' . $output['id'] . '\').checked = this.checked;"',
+			),
+		);
+
 	$counter++;
 
 	return $output;

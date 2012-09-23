@@ -603,11 +603,18 @@ function template_button_strip($button_strip, $direction = '', $strip_options = 
 
 /**
  * Generate a strip of buttons used in post (quote, /modify/etc.).
+ * 
+ * This function is here so that it can be modified by themers, but
+ * in fact it should not be touched so much because it should be easy
+ * to change buttons using only css.
+ * 
  * @param array $button_strip
- * @param string $direction = ''
- * @param array $strip_options = array()
+ * @param array $strip_options (optional) associative array that can contain the following indexes:
+ *   - remove: array of keys of buttons that will not be displayed
+ *   - show: array of keys of elements that will be displayed
+ *   these two are useful to themers if they want to show specific buttons in different places
  */
-function template_quickbuttons_strip($button_strip, $direction = '', $strip_options = array())
+function template_quickbuttons_strip($button_strip, $strip_options = array())
 {
 	global $context, $txt, $options;
 
@@ -617,16 +624,29 @@ function template_quickbuttons_strip($button_strip, $direction = '', $strip_opti
 	if (empty($button_strip))
 		return;
 
+	if (!empty($strip_options['remove']))
+	{
+		foreach ($strip_options['remove'] as $key)
+			if (isset($button_strip[$key]))
+				unset($button_strip[$key]);
+	}
+
 	// Create the buttons...
 	$buttons = array();
 	$more_buttons = array();
+	$display_quick_mod = '';
 	foreach ($button_strip as $key => $value)
 	{
 		if (empty($value))
 			continue;
+		if (!empty($strip_options['show']) && !in_array($key, $strip_options['show']))
+			continue;
+
+		// Show a checkbox for quick moderation?
 		if ($key == 'display_quick_mod')
 		{
-			$display_quick_mod = $value;
+			$display_quick_mod = '
+				<li class="inline_mod_check"' . (isset($value['id']) ? ' id="' . $value['id'] . '"' : '') . (isset($value['custom']) ? ' ' . $value['custom'] : '') . '>' . (isset($value['input']) ? '<input type="checkbox" name="' . $value['input']['name'] . '"' . (isset($value['input']['id']) ? ' id="' . $value['input']['id'] . '"' : '') . ' value="' . $value['input']['value'] . '"' . (isset($value['input']['custom']) ? ' ' . $value['input']['custom'] : '') . ' class="input_check" />' : '') . '</li>';
 			continue;
 		}
 		$text = isset($value['text']) ? $txt[$value['text']] : $txt[$key];
@@ -655,12 +675,7 @@ function template_quickbuttons_strip($button_strip, $direction = '', $strip_opti
 							</ul>
 						</li>';
 
-	// Show a checkbox for quick moderation?
-	if (!empty($display_quick_mod))
-		echo '
-						<li class="inline_mod_check" style="display: none;" id="in_topic_mod_check_', $display_quick_mod, '"></li>';
-
-		echo '
+	echo $display_quick_mod. '
 					</ul>';
 
 }
