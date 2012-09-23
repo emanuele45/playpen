@@ -2309,6 +2309,10 @@ ul.quickbuttons li.inline_mod_check {
 	cursor: pointer;
 	border-radius: 1px 4px 4px 1px;
 }
+.quickbuttons li.post_options a {
+	text-align: left;
+	width: 100%;
+}
 .quickbuttons li.post_options ul {
 	position: absolute;
 	top: 2em;
