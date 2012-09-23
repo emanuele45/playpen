@@ -357,12 +357,6 @@ span.percent {
 .keyinfo {
 	float: right;
 }
-.modifybutton {
-	clear: left;
-	float: left;
-	margin: 8px 0 10px 20px;
-	text-align: left;
-}
 
 /* The quick buttons */
 ul.quickbuttons {

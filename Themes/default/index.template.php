@@ -601,4 +601,67 @@ function template_button_strip($button_strip, $direction = '', $strip_options = 
 		</div>';
 }
 
+/**
+ * Generate a strip of buttons used in post (quote, /modify/etc.).
+ * @param array $button_strip
+ * @param string $direction = ''
+ * @param array $strip_options = array()
+ */
+function template_quickbuttons_strip($button_strip, $direction = '', $strip_options = array())
+{
+	global $context, $txt, $options;
+
+	if (!is_array($strip_options))
+		$strip_options = array();
+
+	// At least, do we have this group of buttons?
+	if (!isset($context[$button_strip]))
+		return;
+
+	// Create the buttons...
+	$buttons = array();
+	$more_buttons = array();
+	foreach ($context[$button_strip] as $key => $value)
+	{
+		if ($key == 'display_quick_mod')
+		{
+			$display_quick_mod = $value;
+			continue;
+		}
+		$text = isset($value['text']) ? $txt[$value['text']] : $txt[$key];
+		$button = '
+				<li' . (isset($value['class']) ? ' class="' . $value['class'] . '"' : '') . '>' . (isset($value['image']) ? '<img src="' . $value['image'] . '" alt="' . $text . '" title="' . $text . (isset($value['id']) ? '" id="' . $value['id'] : '') . (isset($value['custom']) ? ' ' . $value['custom'] : '') . '" />' : '') . (isset($value['url']) ? '<a' . (isset($value['id']) ? ' id="' . $value['id'] . '_button"' : '') . ' class="' . $key . '_button' . '" href="' . $value['url'] . '"' . (isset($value['custom']) ? ' ' . $value['custom'] : '') . '>' : '') . $text . (isset($value['url']) ? '</a>' : '') . '</li>';
+
+		if (empty($value['in_more']))
+			$buttons[] = $button;
+		else
+			$more_buttons[] = $button;
+	}
+
+	// No buttons? No button strip either.
+	if (empty($buttons))
+		return;
+
+	// Show the quickbuttons, for various operations on posts.
+	echo '
+					<ul class="quickbuttons">
+						', implode('', $buttons);
+
+	if (!empty($more_buttons))
+		echo '
+						<li class="post_options">', $txt['post_options'], '
+							<ul>', implode('', $more_buttons), '
+							</ul>
+						</li>';
+
+	// Show a checkbox for quick moderation?
+	if (!empty($display_quick_mod))
+		echo '
+						<li class="inline_mod_check" style="display: none;" id="in_topic_mod_check_', $display_quick_mod, '"></li>';
+
+		echo '
+					</ul>';
+
+}
+
 ?>

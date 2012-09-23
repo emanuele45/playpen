@@ -1283,6 +1283,77 @@ function prepareDisplayContext($reset = false)
 	// Is this user the message author?
 	$output['is_message_author'] = $message['id_member'] == $user_info['id'];
 
+	// Let's prepare the quickbuttons, for various operations on posts.
+	$context['display_buttons'] = array();
+	// Maybe we can approve it, maybe we should?
+	if ($output['can_approve'])
+		$context['display_buttons']['approve'] = array(
+			'url' => $scripturl . '?action=moderate;area=postmod;sa=approve;topic=' . $context['current_topic'] . '.' . $context['start'] . ';msg=' . $output['id'] . ';' . $context['session_var'] . '=' . $context['session_id'],
+		);
+
+	// Can they reply? Have they turned on quick reply?
+	if ($context['can_quote'] && !empty($options['display_quick_reply']))
+		$context['display_buttons']['quote'] = array(
+			'url' => $scripturl . '?action=post;quote=' . $output['id'] . ';topic=' . $context['current_topic'] . '.' . $context['start'] . ';last_msg=' . $context['topic_last_message'],
+			'custom' => 'onclick="return oQuickReply.quote(' . $output['id'] . ');"',
+		);
+
+	// So... quick reply is off, but they *can* reply?
+	elseif ($context['can_quote'])
+		$context['display_buttons']['quote'] = array(
+			'url' => $scripturl . '?action=post;quote=' . $output['id'] . ';topic=' . $context['current_topic'] . '.' . $context['start'] . ';last_msg=' . $context['topic_last_message'],
+		);
+
+	// Can the user modify the contents of this post?  Show the modify inline image.
+	if ($output['can_modify'])
+	{
+		$context['display_buttons']['quick_edit'] = array(
+			'image' => $settings['images_url'] . '/icons/modify_inline.png"',
+			'class' => 'quick_edit',
+			'id' => 'modify_button_' . $output['id'],
+			'custom' => 'style="cursor: pointer; display: none; margin: 0 0 0 0;" onclick="oQuickModify.modifyMsg(\'' . $output['id'] . '\')"',
+		);
+
+		$context['display_buttons']['modify'] = array(
+			'url' => $scripturl . '?action=post;msg=' . $output['id'] . ';topic=' . $context['current_topic'] . '.' . $context['start'],
+			'in_more' => true,
+		);
+	}
+
+	// How about... even... remove it entirely?!
+	if ($output['can_remove'])
+		$context['display_buttons']['remove'] = array(
+			'url' => $scripturl . '?action=deletemsg;topic=' . $context['current_topic'] . '.' . $context['start'] . ';msg=' . $output['id'] . ';' . $context['session_var'] . '=' . $context['session_id'],
+			'custom' => 'onclick="return confirm(\'' . $txt['remove_message'] . '?\');"',
+			'in_more' => true,
+		);
+
+	// What about splitting it off the rest of the topic?
+	if ($context['can_split'] && !empty($context['real_num_replies']))
+		$context['display_buttons']['split'] = array(
+			'url' => $scripturl . '?action=splittopics;topic=' . $context['current_topic'] . '.0;at=' . $output['id'],
+			'in_more' => true,
+		);
+
+	// Can we restore topics?
+	if ($context['can_restore_msg'])
+		$context['display_buttons']['restore'] = array(
+			'text' => 'restore_message',
+			'url' => $scripturl . '?action=restoretopic;msgs=' . $output['id'] . ';' . $context['session_var'] . '=' . $context['session_id'],
+			'in_more' => true,
+		);
+
+	// Maybe we can unapprove it?
+	if ($output['can_unapprove'])
+		$context['display_buttons']['unapprove'] = array(
+			'url' => $scripturl . '?action=moderate;area=postmod;sa=approve;topic=' . $context['current_topic'] . '.' . $context['start'] . ';msg=' . $output['id'] . ';' . $context['session_var'] . '=' . $context['session_id'],
+			'in_more' => true,
+		);
+
+	// Show a checkbox for quick moderation?
+	if (!empty($options['display_quick_mod']) && $options['display_quick_mod'] == 1 && $output['can_remove'])
+		$context['display_buttons']['display_quick_mod'] = $output['id'];
+
 	call_integration_hook('integrate_prepare_display_context', array(&$output, &$message));
 
 	if (empty($options['view_newest_first']))
