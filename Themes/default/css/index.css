@@ -2061,6 +2061,9 @@ p#whoisviewing {
 .poster .dropmenu  li.karma_allow, .poster .dropmenu  li.gender, .poster .dropmenu  li.blurb {
 	padding: 0 10px 0 10px;
 }
+.poster .dropmenu  li.karma_allow a {
+	float: left;
+}
 .poster .dropmenu  li ul li.report_link, .poster .dropmenu  li ul li.issue_warning, .poster .dropmenu  li ul li.poster_ip {
 	margin: 0 0 0 0;
 	padding: 0 0 0 0;
