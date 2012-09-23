@@ -127,24 +127,27 @@ function template_main()
 
 	if (!$context['no_topic_listing'])
 	{
-		echo '
-	<div class="pagesection">
-		', !empty($modSettings['topbottomEnable']) ? $context['menu_separator'] . '<a href="#bot" class="topbottom floatleft">' . $txt['go_down'] . '</a>' : '', '
-		<div class="pagelinks floatleft">', $context['page_index'], '</div>
-		', template_button_strip($context['normal_buttons'], 'right'), '
-	</div>';
 
-	if (!empty($options['show_board_desc']) && $context['description'] != '')
-		echo '
-	<div class="cat_bar description_header">
-		<h3 class="catbg">', $context['name'], '</h3>
-	</div>
-	<p class="description_board">
-		', $context['description'], '<br/>';
+		// If Quick Moderation is enabled start the form.
+		if (!empty($context['can_quick_mod']) && $options['display_quick_mod'] > 0 && !empty($context['topics']))
+			echo '
+	<form action="', $scripturl, '?action=quickmod;board=', $context['current_board'], '.', $context['start'], '" method="post" accept-charset="', $context['character_set'], '" class="clear" name="quickModForm" id="quickModForm">';
 
-	if (!empty($context['moderators']))
 		echo '
-		', count($context['moderators']) === 1 ? $txt['moderator'] : $txt['moderators'], ': ', implode(', ', $context['link_moderators']), '.&nbsp;&nbsp;';
+	<div class="tborder topic_table" id="messageindex">';
+
+
+		if (!empty($options['show_board_desc']) && $context['description'] != '')
+			echo '
+		<div class="cat_bar description_header">
+			<h3 class="catbg">', $context['name'], '</h3>
+		</div>
+		<p class="description_board">
+			', $context['description'], '<br/>';
+
+		if (!empty($context['moderators']))
+			echo '
+			', count($context['moderators']) === 1 ? $txt['moderator'] : $txt['moderators'], ': ', implode(', ', $context['link_moderators']), '.&nbsp;&nbsp;';
 
 		if (!empty($settings['display_who_viewing']))
 		{
@@ -154,16 +157,20 @@ function template_main()
 				echo empty($context['view_members_list']) ? '0 ' . $txt['members'] : implode(', ', $context['view_members_list']) . ((empty($context['view_num_hidden']) or $context['can_moderate_forum']) ? '' : ' (+ ' . $context['view_num_hidden'] . ' ' . $txt['hidden'] . ')');
 			echo $txt['who_and'], $context['view_num_guests'], ' ', $context['view_num_guests'] == 1 ? $txt['guest'] : $txt['guests'], $txt['who_viewing_board'], '';
 		}
-		echo '
-	</p>';
 
-		// If Quick Moderation is enabled start the form.
-		if (!empty($context['can_quick_mod']) && $options['display_quick_mod'] > 0 && !empty($context['topics']))
-			echo '
-	<form action="', $scripturl, '?action=quickmod;board=', $context['current_board'], '.', $context['start'], '" method="post" accept-charset="', $context['character_set'], '" class="clear" name="quickModForm" id="quickModForm">';
+		if (!empty($options['show_board_desc']) && $context['description'] != '')
+				echo '
+		</p>';
 
-		echo '
-	<div class="tborder topic_table" id="messageindex">
+	echo '
+			<div class="pagesection">
+				', !empty($modSettings['topbottomEnable']) ? $context['menu_separator'] . '<a href="#bot" class="topbottom floatleft">' . $txt['go_down'] . '</a>' : '', '
+				<div class="pagelinks floatleft">', $context['page_index'], '</div>
+				', template_button_strip($context['normal_buttons'], 'right'), '
+			</div>';
+
+	echo '
+	
 		<table class="table_grid" cellspacing="0">
 			<thead>
 				<tr class="catbg">';
@@ -340,6 +347,11 @@ function template_main()
 		echo '
 			</tbody>
 		</table>
+		<div class="pagesection">
+			', template_button_strip($context['normal_buttons'], 'right'), '
+			', !empty($modSettings['topbottomEnable']) ? $context['menu_separator'] . '<a href="#top" class="topbottom floatleft">' . $txt['go_up'] . '</a>' : '', '
+			<div class="pagelinks">', $context['page_index'], '</div>
+		</div>
 	</div>';
 
 		// Finish off the form - again.
@@ -349,11 +361,7 @@ function template_main()
 	</form>';
 
 		echo '
-	<div class="pagesection">
-		', template_button_strip($context['normal_buttons'], 'right'), '
-		', !empty($modSettings['topbottomEnable']) ? $context['menu_separator'] . '<a href="#top" class="topbottom floatleft">' . $txt['go_up'] . '</a>' : '', '
-		<div class="pagelinks">', $context['page_index'], '</div>
-	</div>';
+';
 	}
 
 	// Show breadcrumbs at the bottom too.
