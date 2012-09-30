@@ -127,16 +127,6 @@ function template_main()
 
 	if (!$context['no_topic_listing'])
 	{
-
-		// If Quick Moderation is enabled start the form.
-		if (!empty($context['can_quick_mod']) && $options['display_quick_mod'] > 0 && !empty($context['topics']))
-			echo '
-	<form action="', $scripturl, '?action=quickmod;board=', $context['current_board'], '.', $context['start'], '" method="post" accept-charset="', $context['character_set'], '" class="clear" name="quickModForm" id="quickModForm">';
-
-		echo '
-	<div class="tborder topic_table" id="messageindex">';
-
-
 		if (!empty($options['show_board_desc']) && $context['description'] != '')
 			echo '
 		<div class="cat_bar description_header">
@@ -161,6 +151,14 @@ function template_main()
 		if (!empty($options['show_board_desc']) && $context['description'] != '')
 				echo '
 		</p>';
+
+		// If Quick Moderation is enabled start the form.
+		if (!empty($context['can_quick_mod']) && $options['display_quick_mod'] > 0 && !empty($context['topics']))
+			echo '
+	<form action="', $scripturl, '?action=quickmod;board=', $context['current_board'], '.', $context['start'], '" method="post" accept-charset="', $context['character_set'], '" class="clear" name="quickModForm" id="quickModForm">';
+
+		echo '
+	<div class="tborder topic_table" id="messageindex">';
 
 	echo '
 			<div class="pagesection">
