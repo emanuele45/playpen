@@ -176,7 +176,6 @@ function template_main()
 				<tr class="catbg">';
 
 		// Are there actually any topics to show?
-		// [WIP] There is trial code here to hide the topic icon column. Colspan can be cleaned up later.
 		if (!empty($context['topics']))
 		{
 			echo '
@@ -250,7 +249,7 @@ function template_main()
 				<tr>
 					<td class="', $color_class, ' topic_icons">
 						<div>
-							<img src="', !$topic['is_poll'] ? $topic['first_post']['icon_url'] : $settings['images_url'] .'/post/poll.png', '" alt="" />
+							<img src="', !$topic['is_poll'] || $topic['first_post']['icon'] != 'xx' ? $topic['first_post']['icon_url'] : $settings['images_url'] .'/post/poll.png', '" alt="" />
 							', $topic['is_posted_in'] ? '<img src="'. $settings['images_url']. '/icons/profile_sm.png" alt="" class="mypost" />' : '','
 							', $topic['is_locked'] ? '<img src="'. $settings['images_url']. '/icons/quick_lock.png" alt="" class="locked" />' : '','
 							', $topic['is_sticky'] ? '<img src="'. $settings['images_url']. '/icons/quick_sticky.png" alt="" class="sticky" />' : '','
