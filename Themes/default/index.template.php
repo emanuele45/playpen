@@ -651,7 +651,7 @@ function template_quickbuttons_strip($button_strip, $strip_options = array())
 		}
 		$text = isset($value['text']) ? $txt[$value['text']] : $txt[$key];
 		$button = '
-				<li' . (isset($value['class']) ? ' class="' . $value['class'] . '"' : '') . '>' . (isset($value['image']) ? '<img src="' . $value['image'] . '" alt="' . $text . '" title="' . $text . (isset($value['id']) ? '" id="' . $value['id'] : '') . (isset($value['custom']) ? ' ' . $value['custom'] : '') . '" />' : '') . (isset($value['url']) ? '<a' . (isset($value['id']) ? ' id="' . $value['id'] . '_button"' : '') . ' class="' . $key . '_button' . '" href="' . $value['url'] . '"' . (isset($value['custom']) ? ' ' . $value['custom'] : '') . '>' : '') . $text . (isset($value['url']) ? '</a>' : '') . '</li>';
+				<li' . (isset($value['class']) ? ' class="' . $value['class'] . '"' : '') . '>' . (isset($value['image']) ? '<img src="' . $value['image'] . '" alt="' . $text . '" title="' . $text .  '" ' . (isset($value['id']) ? ' id="' . $value['id'] : '') . (isset($value['custom']) ? ' ' . $value['custom'] : '') . '" />' : '') . (isset($value['url']) ? '<a' . (isset($value['id']) ? ' id="' . $value['id'] . '_button"' : '') . ' class="' . $key . '_button' . '" href="' . $value['url'] . '"' . (isset($value['custom']) ? ' ' . $value['custom'] : '') . '>' : '') . $text . (isset($value['url']) ? '</a>' : '') . '</li>';
 
 		if (empty($value['in_more']))
 			$buttons[] = $button;
