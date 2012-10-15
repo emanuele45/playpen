@@ -156,7 +156,7 @@ function template_folder()
 				</div>';
 
 		// Show a few buttons if we are in conversation mode and outputting the first message.
-		if ($context['display_mode'] == 2)
+		if (!empty($context['conversation_buttons']))
 		{
 			// Show the conversation buttons.
 			echo '
@@ -539,11 +539,10 @@ function template_folder()
 		<div class="floatright"><input type="submit" name="del_selected" value="', $txt['quickmod_delete_selected'], '" style="font-weight: normal;" onclick="if (!confirm(\'', $txt['delete_selected_confirm'], '\')) return false;" class="button_submit" /></div>
 	</div>';
 
-		// Show a few buttons if we are in conversation mode and outputting the first message.
-		elseif ($context['display_mode'] == 2 && isset($context['conversation_buttons']))
+		// Show a few buttons if any is present.
+		if (!empty($context['conversation_buttons']))
 		{
 			echo '
-
 	<div class="pagesection">';
 
 			template_button_strip($context['conversation_buttons'], 'right');
@@ -560,7 +559,8 @@ function template_folder()
 	if ($context['display_mode'] == 1)
 	{
 		template_subject_list();
-		echo '<br />';
+		echo '
+		<br />';
 	}
 
 	echo '

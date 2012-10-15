@@ -559,6 +559,17 @@ function MessageFolder()
 		'num_pages' => floor(($max_messages - 1) / $modSettings['defaultMaxMessages']) + 1
 	);
 
+	$pm_parameters = array(
+		'current_member' => $user_info['id'],
+		'not_deleted' => 0,
+		'id_member' => $context['folder'] == 'sent' ? 'pmr.id_member' : 'pm.id_member_from',
+		'id_pm' => isset($pmsg) ? $pmsg : '0',
+		'sort' => $_GET['sort'],
+	);
+	$pm_selects = array();
+	$pm_tables = array();
+	call_integration_hook('integrate_query_pm', array($pm_selects, $pm_tables, $pm_parameters));
+
 	// First work out what messages we need to see - if grouped is a little trickier...
 	if ($context['display_mode'] == 2)
 	{
@@ -567,6 +578,7 @@ function MessageFolder()
 		{
 			$sub_request = $smcFunc['db_query']('', '
 				SELECT MAX({raw:sort}) AS sort_param, pm.id_pm_head
+					' . (!empty($pm_selects) ? implode(',', $pm_selects) : '') . '
 				FROM {db_prefix}personal_messages AS pm' . ($context['folder'] == 'sent' ? ($context['sort_by'] == 'name' ? '
 					LEFT JOIN {db_prefix}pm_recipients AS pmr ON (pmr.id_pm = pm.id_pm)' : '') : '
 					INNER JOIN {db_prefix}pm_recipients AS pmr ON (pmr.id_pm = pm.id_pm
@@ -574,19 +586,14 @@ function MessageFolder()
 						AND pmr.deleted = {int:not_deleted}
 						' . $labelQuery . ')') . ($context['sort_by'] == 'name' ? ( '
 					LEFT JOIN {db_prefix}members AS mem ON (mem.id_member = {raw:id_member})') : '') . '
+					' . (!empty($pm_tables) ? implode("\n\t", $pm_tables) : '') . '
 				WHERE ' . ($context['folder'] == 'sent' ? 'pm.id_member_from = {int:current_member}
 					AND pm.deleted_by_sender = {int:not_deleted}' : '1=1') . (empty($pmsg) ? '' : '
 					AND pm.id_pm = {int:id_pm}') . '
 				GROUP BY pm.id_pm_head
 				ORDER BY sort_param' . ($descending ? ' DESC' : ' ASC') . (empty($pmsg) ? '
 				LIMIT ' . $_GET['start'] . ', ' . $modSettings['defaultMaxMessages'] : ''),
-				array(
-					'current_member' => $user_info['id'],
-					'not_deleted' => 0,
-					'id_member' => $context['folder'] == 'sent' ? 'pmr.id_member' : 'pm.id_member_from',
-					'id_pm' => isset($pmsg) ? $pmsg : '0',
-					'sort' => $_GET['sort'],
-				)
+				$pm_parameters
 			);
 			$sub_pms = array();
 			while ($row = $smcFunc['db_fetch_assoc']($sub_request))
@@ -596,6 +603,7 @@ function MessageFolder()
 
 			$request = $smcFunc['db_query']('', '
 				SELECT pm.id_pm AS id_pm, pm.id_pm_head
+					' . (!empty($pm_selects) ? implode(',', $pm_selects) : '') . '
 				FROM {db_prefix}personal_messages AS pm' . ($context['folder'] == 'sent' ? ($context['sort_by'] == 'name' ? '
 					LEFT JOIN {db_prefix}pm_recipients AS pmr ON (pmr.id_pm = pm.id_pm)' : '') : '
 					INNER JOIN {db_prefix}pm_recipients AS pmr ON (pmr.id_pm = pm.id_pm
@@ -603,15 +611,13 @@ function MessageFolder()
 						AND pmr.deleted = {int:not_deleted}
 						' . $labelQuery . ')') . ($context['sort_by'] == 'name' ? ( '
 					LEFT JOIN {db_prefix}members AS mem ON (mem.id_member = {raw:id_member})') : '') . '
+					' . (!empty($pm_tables) ? implode("\n\t", $pm_tables) : '') . '
 				WHERE ' . (empty($sub_pms) ? '0=1' : 'pm.id_pm IN ({array_int:pm_list})') . '
 				ORDER BY ' . ($_GET['sort'] == 'pm.id_pm' && $context['folder'] != 'sent' ? 'id_pm' : '{raw:sort}') . ($descending ? ' DESC' : ' ASC') . (empty($pmsg) ? '
 				LIMIT ' . $_GET['start'] . ', ' . $modSettings['defaultMaxMessages'] : ''),
-				array(
-					'current_member' => $user_info['id'],
-					'pm_list' => array_keys($sub_pms),
-					'not_deleted' => 0,
-					'sort' => $_GET['sort'],
-					'id_member' => $context['folder'] == 'sent' ? 'pmr.id_member' : 'pm.id_member_from',
+				array_merge(
+					$pm_parameters,
+					array('pm_list' => array_keys($sub_pms))
 				)
 			);
 		}
@@ -619,26 +625,22 @@ function MessageFolder()
 		{
 			$request = $smcFunc['db_query']('pm_conversation_list', '
 				SELECT MAX(pm.id_pm) AS id_pm, pm.id_pm_head
+					' . (!empty($pm_selects) ? implode(',', $pm_selects) : '') . '
 				FROM {db_prefix}personal_messages AS pm' . ($context['folder'] == 'sent' ? ($context['sort_by'] == 'name' ? '
 					LEFT JOIN {db_prefix}pm_recipients AS pmr ON (pmr.id_pm = pm.id_pm)' : '') : '
 					INNER JOIN {db_prefix}pm_recipients AS pmr ON (pmr.id_pm = pm.id_pm
 						AND pmr.id_member = {int:current_member}
-						AND pmr.deleted = {int:deleted_by}
+						AND pmr.deleted = {int:not_deleted}
 						' . $labelQuery . ')') . ($context['sort_by'] == 'name' ? ( '
 					LEFT JOIN {db_prefix}members AS mem ON (mem.id_member = {raw:pm_member})') : '') . '
+					' . (!empty($pm_tables) ? implode("\n\t", $pm_tables) : '') . '
 				WHERE ' . ($context['folder'] == 'sent' ? 'pm.id_member_from = {int:current_member}
-					AND pm.deleted_by_sender = {int:deleted_by}' : '1=1') . (empty($pmsg) ? '' : '
+					AND pm.deleted_by_sender = {int:not_deleted}' : '1=1') . (empty($pmsg) ? '' : '
 					AND pm.id_pm = {int:pmsg}') . '
 				GROUP BY pm.id_pm_head
 				ORDER BY ' . ($_GET['sort'] == 'pm.id_pm' && $context['folder'] != 'sent' ? 'id_pm' : '{raw:sort}') . ($descending ? ' DESC' : ' ASC') . (empty($_GET['pmsg']) ? '
 				LIMIT ' . $_GET['start'] . ', ' . $modSettings['defaultMaxMessages'] : ''),
-				array(
-					'current_member' => $user_info['id'],
-					'deleted_by' => 0,
-					'sort' => $_GET['sort'],
-					'pm_member' => $context['folder'] == 'sent' ? 'pmr.id_member' : 'pm.id_member_from',
-					'pmsg' => isset($pmsg) ? (int) $pmsg : 0,
-				)
+				$pm_parameters
 			);
 		}
 	}
@@ -648,25 +650,21 @@ function MessageFolder()
 		// @todo SLOW This query uses a filesort. (inbox only.)
 		$request = $smcFunc['db_query']('', '
 			SELECT pm.id_pm, pm.id_pm_head, pm.id_member_from
+				' . (!empty($pm_selects) ? implode(',', $pm_selects) : '') . '
 			FROM {db_prefix}personal_messages AS pm' . ($context['folder'] == 'sent' ? '' . ($context['sort_by'] == 'name' ? '
 				LEFT JOIN {db_prefix}pm_recipients AS pmr ON (pmr.id_pm = pm.id_pm)' : '') : '
 				INNER JOIN {db_prefix}pm_recipients AS pmr ON (pmr.id_pm = pm.id_pm
 					AND pmr.id_member = {int:current_member}
-					AND pmr.deleted = {int:is_deleted}
+					AND pmr.deleted = {int:not_deleted}
 					' . $labelQuery . ')') . ($context['sort_by'] == 'name' ? ( '
 				LEFT JOIN {db_prefix}members AS mem ON (mem.id_member = {raw:pm_member})') : '') . '
+				' . (!empty($pm_tables) ? implode("\n\t", $pm_tables) : '') . '
 			WHERE ' . ($context['folder'] == 'sent' ? 'pm.id_member_from = {raw:current_member}
-				AND pm.deleted_by_sender = {int:is_deleted}' : '1=1') . (empty($pmsg) ? '' : '
+				AND pm.deleted_by_sender = {int:not_deleted}' : '1=1') . (empty($pmsg) ? '' : '
 				AND pm.id_pm = {int:pmsg}') . '
 			ORDER BY ' . ($_GET['sort'] == 'pm.id_pm' && $context['folder'] != 'sent' ? 'pmr.id_pm' : '{raw:sort}') . ($descending ? ' DESC' : ' ASC') . (empty($pmsg) ? '
 			LIMIT ' . $_GET['start'] . ', ' . $modSettings['defaultMaxMessages'] : ''),
-			array(
-				'current_member' => $user_info['id'],
-				'is_deleted' => 0,
-				'sort' => $_GET['sort'],
-				'pm_member' => $context['folder'] == 'sent' ? 'pmr.id_member' : 'pm.id_member_from',
-				'pmsg' => isset($pmsg) ? (int) $pmsg : 0,
-			)
+			$pm_parameters
 		);
 	}
 	// Load the id_pms and initialize recipients.
@@ -860,15 +858,13 @@ function MessageFolder()
 
 	// Build the conversation button array.
 	if ($context['display_mode'] == 2)
-	{
 		$context['conversation_buttons'] = array(
 			'reply' => array('text' => 'reply_to_all', 'image' => 'reply.png', 'lang' => true, 'url' => $scripturl . '?action=pm;sa=send;f=' . $context['folder'] . ($context['current_label_id'] != -1 ? ';l=' . $context['current_label_id'] : '') . ';pmsg=' . $context['current_pm'] . ';u=all', 'active' => true),
 			'delete' => array('text' => 'delete_conversation', 'image' => 'delete.png', 'lang' => true, 'url' => $scripturl . '?action=pm;sa=pmactions;pm_actions[' . $context['current_pm'] . ']=delete;conversation;f=' . $context['folder'] . ';start=' . $context['start'] . ($context['current_label_id'] != -1 ? ';l=' . $context['current_label_id'] : '') . ';' . $context['session_var'] . '=' . $context['session_id'], 'custom' => 'onclick="return confirm(\'' . addslashes($txt['remove_message']) . '?\');"'),
 		);
 
-		// Allow mods to add additional buttons here
-		call_integration_hook('integrate_conversation_buttons');
-	}
+	// Allow mods to add additional buttons here (not only in conversation mode)
+	call_integration_hook('integrate_pm_conversation_buttons');
 }
 
 /**
@@ -998,6 +994,8 @@ function prepareMessageContext($type = 'subject', $reset = false)
 		'can_report' => !empty($modSettings['enableReportPM']),
 		'can_see_ip' => allowedTo('moderate_forum') || ($message['id_member'] == $user_info['id'] && !empty($user_info['id'])),
 	);
+
+	call_integration_hook('integrate_prepare_pm_context', array($output, $message, $counter));
 
 	$counter++;
 
