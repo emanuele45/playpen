@@ -66,34 +66,40 @@ function SaveDraft(&$post_errors)
 	if ($smcFunc['strlen']($draft['subject']) > 100)
 		$draft['subject'] = $smcFunc['substr']($draft['subject'], 0, 100);
 
+	$knownInts = array('id_topic', 'id_board', 'type', 'id_member', 'poster_time', 'smileys_enabled', 'locked', 'is_sticky');
+
 	// Modifying an existing draft, like hitting the save draft button or autosave enabled?
 	if (!empty($id_draft) && !empty($draft_info) && $draft_info['id_member'] == $user_info['id'])
 	{
+		$draft_columns = array(
+			'id_topic' => $topic_id,
+			'id_board' => $board,
+			'poster_time' => time(),
+			'subject' => $draft['subject'],
+			'smileys_enabled' => (int) $draft['smileys_enabled'],
+			'body' => $draft['body'],
+			'icon' => $draft['icon'],
+			'locked' => $draft['locked'],
+			'is_sticky' => $draft['sticky'],
+		);
+		$update_parameters = array(
+			'id_draft' => $id_draft,
+		);
+
+		call_integration_hook('integrate_modify_draft', array($draft_columns, $update_parameters, $draft_info, $knownInts));
+
+		foreach ($draft_columns as $var => $val)
+		{
+			$draft_columns[$var] = $var . ' = {' . (in_array($var, $knownInts) ? 'int' : 'string') . ':var_' . $var . '}';
+			$update_parameters['var_' . $var] = $val;
+		}
+
 		$smcFunc['db_query']('', '
 			UPDATE {db_prefix}user_drafts
 			SET
-				id_topic = {int:id_topic},
-				id_board = {int:id_board},
-				poster_time = {int:poster_time},
-				subject = {string:subject},
-				smileys_enabled = {int:smileys_enabled},
-				body = {string:body},
-				icon = {string:icon},
-				locked = {int:locked},
-				is_sticky = {int:is_sticky}
+				' . implode(', ', $draft_columns) . '
 			WHERE id_draft = {int:id_draft}',
-			array (
-				'id_topic' => $topic_id,
-				'id_board' => $board,
-				'poster_time' => time(),
-				'subject' => $draft['subject'],
-				'smileys_enabled' => (int) $draft['smileys_enabled'],
-				'body' => $draft['body'],
-				'icon' => $draft['icon'],
-				'locked' => $draft['locked'],
-				'is_sticky' => $draft['sticky'],
-				'id_draft' => $id_draft,
-			)
+			$update_parameters
 		);
 
 		// some items to return to the form
@@ -106,34 +112,39 @@ function SaveDraft(&$post_errors)
 	// otherwise creating a new draft
 	else
 	{
+		$draft_columns = array(
+			'id_topic' => 'int',
+			'id_board' => 'int',
+			'type' => 'int',
+			'poster_time' => 'int',
+			'id_member' => 'int',
+			'subject' => 'string-255',
+			'smileys_enabled' => 'int',
+			'body' => !empty($modSettings['max_messageLength']) && $modSettings['max_messageLength'] > 65534 ? 'string-' . $modSettings['max_messageLength'] : (empty($modSettings['max_messageLength']) ? 'string' : 'string-65534'),
+			'icon' => 'string-16',
+			'locked' => 'int',
+			'is_sticky' => 'int'
+		);
+		$draft_parameters = array(
+			$topic_id,
+			$board,
+			0,
+			time(),
+			$user_info['id'],
+			$draft['subject'],
+			$draft['smileys_enabled'],
+			$draft['body'],
+			$draft['icon'],
+			$draft['locked'],
+			$draft['sticky']
+		);
+
+		$post_errors = call_integration_hook('integrate_create_draft', array($draft_info, $draft_columns, $draft_parameters));
+
 		$smcFunc['db_insert']('',
 			'{db_prefix}user_drafts',
-			array(
-				'id_topic' => 'int',
-				'id_board' => 'int',
-				'type' => 'int',
-				'poster_time' => 'int',
-				'id_member' => 'int',
-				'subject' => 'string-255',
-				'smileys_enabled' => 'int',
-				'body' => (!empty($modSettings['max_messageLength']) && $modSettings['max_messageLength'] > 65534 ? 'string-' . $modSettings['max_messageLength'] : 'string-65534'),
-				'icon' => 'string-16',
-				'locked' => 'int',
-				'is_sticky' => 'int'
-			),
-			array(
-				$topic_id,
-				$board,
-				0,
-				time(),
-				$user_info['id'],
-				$draft['subject'],
-				$draft['smileys_enabled'],
-				$draft['body'],
-				$draft['icon'],
-				$draft['locked'],
-				$draft['sticky']
-			),
+			$draft_columns,
+			$draft_parameters,
 			array(
 				'id_draft'
 			)
@@ -196,8 +207,8 @@ function SavePMDraft(&$post_errors, $recipientList)
 		$context['draft_saved_on'] = $draft_info['poster_time'];
 
 		// Send something back to the javascript caller
-		if (!empty($id_draft))
-			XmlDraft($id_draft);
+		if (!empty($id_pm_draft))
+			XmlDraft($id_pm_draft);
 
 		return true;
 	}
@@ -222,30 +233,39 @@ function SavePMDraft(&$post_errors, $recipientList)
 	if ($smcFunc['strlen']($draft['subject']) > 100)
 		$draft['subject'] = $smcFunc['substr']($draft['subject'], 0, 100);
 
+	$knownInts = array('id_reply', 'type', 'id_member', 'poster_time', 'outbox');
+
 	// Modifying an existing PM draft?
 	if (!empty($id_pm_draft) && !empty($draft_info) && $draft_info['id_member'] == $user_info['id'])
 	{
+		$draft_columns = array(
+			'id_reply' => $reply_id,
+			'type' => 1,
+			'poster_time' => time(),
+			'subject' => $draft['subject'],
+			'body' => $draft['body'],
+			'to_list' => serialize($recipientList),
+			'outbox' => $outbox,
+		);
+			$update_parameters = array(
+			'id_pm_draft' => $id_pm_draft,
+		);
+
+		call_integration_hook('integrate_modify_pm_draft', array($draft_columns, $update_parameters, $draft_info, $knownInts));
+
+		foreach ($draft_columns as $var => $val)
+		{
+			$draft_columns[$var] = $var . ' = {' . (in_array($var, $knownInts) ? 'int' : 'string') . ':var_' . $var . '}';
+			$update_parameters['var_' . $var] = $val;
+		}
+
 		$smcFunc['db_query']('', '
 			UPDATE {db_prefix}user_drafts
-			SET id_reply = {int:id_reply},
-				type = {int:type},
-				poster_time = {int:poster_time},
-				subject = {string:subject},
-				body = {string:body},
-				to_list = {string:to_list},
-				outbox = {int:outbox}
+			SET
+				' . implode(', ', $draft_columns) . '
 			WHERE id_draft = {int:id_pm_draft}
 			LIMIT 1',
-			array(
-				'id_reply' => $reply_id,
-				'type' => 1,
-				'poster_time' => time(),
-				'subject' => $draft['subject'],
-				'body' => $draft['body'],
-				'id_pm_draft' => $id_pm_draft,
-				'to_list' => serialize($recipientList),
-				'outbox' => $outbox,
-			)
+			$update_parameters
 		);
 
 		// some items to return to the form
@@ -255,28 +275,33 @@ function SavePMDraft(&$post_errors, $recipientList)
 	// otherwise creating a new PM draft.
 	else
 	{
+		$draft_columns = array(
+			'id_reply' => 'int',
+			'type' => 'int',
+			'poster_time' => 'int',
+			'id_member' => 'int',
+			'subject' => 'string-255',
+			'body' => 'string-65534',
+			'to_list' => 'string-255',
+			'outbox' => 'int',
+		);
+		$draft_parameters = array(
+			$reply_id,
+			1,
+			time(),
+			$user_info['id'],
+			$draft['subject'],
+			$draft['body'],
+			serialize($recipientList),
+			$outbox,
+		);
+
+		$post_errors = call_integration_hook('integrate_create_pm_draft', array($draft_info, $draft_columns, $draft_parameters));
+
 		$smcFunc['db_insert']('',
 			'{db_prefix}user_drafts',
-			array(
-				'id_reply' => 'int',
-				'type' => 'int',
-				'poster_time' => 'int',
-				'id_member' => 'int',
-				'subject' => 'string-255',
-				'body' => 'string-65534',
-				'to_list' => 'string-255',
-				'outbox' => 'int',
-			),
-			array(
-				$reply_id,
-				1,
-				time(),
-				$user_info['id'],
-				$draft['subject'],
-				$draft['body'],
-				serialize($recipientList),
-				$outbox,
-			),
+			$draft_columns,
+			$draft_parameters,
 			array(
 				'id_draft'
 			)
@@ -423,6 +448,8 @@ function DeleteDraft($id_draft, $check = true)
 			'id_member' => empty($user_info['id']) ? -1 : $user_info['id'],
 		)
 	);
+
+	call_integration_hook('integrate_remove_drafts', array($id_draft, $check));
 }
 
 /**
@@ -859,6 +886,8 @@ function ModifyDraftSettings($return_config = false)
 		array('int', 'drafts_autosave_frequency', 'postinput' => $txt['manageposts_seconds'], 'subtext' => $txt['drafts_autosave_frequency_subnote']),
 	);
 
+	call_integration_hook('modify_drafts_settings', array($config_vars));
+
 	if ($return_config)
 		return $config_vars;
 
@@ -876,6 +905,9 @@ function ModifyDraftSettings($return_config = false)
 
 		// Protect them from themselves.
 		$_POST['drafts_autosave_frequency'] = $_POST['drafts_autosave_frequency'] < 30 ? 30 : $_POST['drafts_autosave_frequency'];
+
+		call_integration_hook('modify_save_drafts_settings');
+
 		saveDBSettings($config_vars);
 		redirectexit('action=admin;area=managedrafts');
 	}
