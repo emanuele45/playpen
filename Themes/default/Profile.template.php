@@ -346,12 +346,6 @@ function template_showPosts()
 			<div class="pagelinks">' . $context['page_index'] . '</div>
 		</div>' : '';
 
-	// Button shortcuts
-	$quote_button = create_button('quote.png', 'reply_quote', 'quote', 'class="centericon"');
-	$reply_button = create_button('reply_sm.png', 'reply', 'reply', 'class="centericon"');
-	$remove_button = create_button('delete.png', 'remove_message', 'remove', 'class="centericon"');
-	$notify_button = create_button('notify_sm.png', 'notify_replies', 'notify', 'class="centericon"');
-
 	// Are we displaying posts or attachments?
 	if (!isset($context['attachments']))
 	{
@@ -368,7 +362,7 @@ function template_showPosts()
 					</div>
 					<div class="list_posts">';
 
-			if (!$post['approved'])
+			if (empty($post['approved']))
 				echo '
 						<div class="approve_post">
 							<em>', $txt['post_awaiting_approval'], '</em>
@@ -378,32 +372,38 @@ function template_showPosts()
 					', $post['body'], '
 					</div>';
 
-			if ($post['can_reply'] || $post['can_mark_notify'] || $post['can_delete'])
+			if (!empty($post['can_reply']) || !empty($post['can_mark_notify']) || !empty($post['can_delete']) || !empty($post['id_draft']))
 				echo '
 				<div class="floatright">
 					<ul class="reset smalltext quickbuttons">';
 
 			// If they *can* reply?
-			if ($post['can_reply'])
+			if (!empty($post['can_reply']))
 				echo '
 						<li><a href="', $scripturl, '?action=post;topic=', $post['topic'], '.', $post['start'], '" class="reply_button"><span>', $txt['reply'], '</span></a></li>';
 
 			// If they *can* quote?
-			if ($post['can_quote'])
+			if (!empty($post['can_quote']))
 				echo '
 						<li><a href="', $scripturl . '?action=post;topic=', $post['topic'], '.', $post['start'], ';quote=', $post['id'], '" class="quote_button"><span>', $txt['quote'], '</span></a></li>';
 
 			// Can we request notification of topics?
-			if ($post['can_mark_notify'])
+			if (!empty($post['can_mark_notify']))
 				echo '
 						<li><a href="', $scripturl, '?action=notify;topic=', $post['topic'], '.', $post['start'], '" class="notify_button"><span>', $txt['notify'], '</span></a></li>';
 
 			// How about... even... remove it entirely?!
-			if ($post['can_delete'])
+			if (!empty($post['can_delete']))
 				echo '
 						<li><a href="', $scripturl, '?action=deletemsg;msg=', $post['id'], ';topic=', $post['topic'], ';profile;u=', $context['member']['id'], ';start=', $context['start'], ';', $context['session_var'], '=', $context['session_id'], '" onclick="return confirm(\'', $txt['remove_message'], '?\');" class="remove_button"><span>', $txt['remove'], '</span></a></li>';
 
-			if ($post['can_reply'] || $post['can_mark_notify'] || $post['can_delete'])
+			// This is a draft
+			if (!empty($post['id_draft']))
+				echo '
+						<li><a href="', $scripturl, '?action=post;', (empty($draft['topic']['id']) ? 'board=' . $draft['board']['id'] : 'topic=' . $draft['topic']['id']), '.0;id_draft=', $draft['id_draft'], '" class="reply_button"><span>', $txt['draft_edit'], '</span></a></li>
+						<li><a href="', $scripturl, '?action=profile;u=', $context['member']['id'], ';area=showdrafts;delete=', $draft['id_draft'], ';', $context['session_var'], '=', $context['session_id'], '" onclick="return confirm(\'', $txt['draft_remove'], '?\');" class="remove_button"><span>', $txt['draft_delete'], '</span></a></li>';
+
+			if (!empty($post['can_reply']) || !empty($post['can_mark_notify']) || !empty($post['can_delete']) || !empty($post['id_draft']))
 				echo '
 					</ul>
 				</div>';
@@ -419,92 +419,14 @@ function template_showPosts()
 	// No posts? Just end the table with a informative message.
 	if ((isset($context['attachments']) && empty($context['attachments'])) || (!isset($context['attachments']) && empty($context['posts'])))
 		echo '
-				<tr>
-					<td class="tborder windowbg2 padding centertext" colspan="4">
-						', isset($context['attachments']) ? $txt['show_attachments_none'] : ($context['is_topics'] ? $txt['show_topics_none'] : $txt['show_posts_none']), '
-					</td>
-				</tr>';
-
-		echo '
-			</tbody>
-		</table>';
+				<div class="tborder windowbg2 padding centertext">
+					', isset($context['attachments']) ? $txt['show_attachments_none'] : ($context['is_topics'] ? $txt['show_topics_none'] : $txt['show_posts_none']), '
+				</div>';
 
 	// Show more page numbers.
 	if (!empty($context['page_index']))
 		echo '
-		<div class="pagesection" style="margin-bottom: 0;">
-			<div class="pagelinks">', $context['page_index'], '</div>
-		</div>';
-}
-
-// Template for showing all the drafts of the user.
-function template_showDrafts()
-{
-	global $context, $settings, $options, $scripturl, $modSettings, $txt;
-
-	echo '
-		<div class="cat_bar">
-			<h3 class="catbg">
-				<span class="ie6_header floatleft"><img src="', $settings['images_url'], '/message_sm.png" alt="" class="icon" />
-					', $txt['drafts_show'], ' - ', $context['member']['name'], '
-				</span>
-			</h3>
-		</div>
-		<div class="pagesection" style="margin-bottom: 0;">
-			<div class="pagelinks">', $context['page_index'], '</div>
-		</div>';
-
-	// Button shortcuts
-	$edit_button = create_button('modify_inline.png', 'draft_edit', 'draft_edit', 'class="centericon"');
-	$remove_button = create_button('delete.png', 'draft_delete', 'draft_delete', 'class="centericon"');
-
-	// No drafts? Just show an informative message.
-	if (empty($context['drafts']))
-		echo '
-		<div class="tborder windowbg2 padding centertext">
-			', $txt['draft_none'], '
-		</div>';
-	else
-	{
-		// For every draft to be displayed, give it its own div, and show the important details of the draft.
-		foreach ($context['drafts'] as $draft)
-		{
-			echo '
-			<div class="topic">
-				<div class="', $draft['alternate'] == 0 ? 'windowbg2' : 'windowbg', ' core_posts">
-					<div class="content">
-						<div class="counter">', $draft['counter'], '</div>
-						<div class="topic_details">
-							<h5><strong><a href="', $scripturl, '?board=', $draft['board']['id'], '.0">', $draft['board']['name'], '</a> / ', $draft['topic']['link'], '</strong> &nbsp; &nbsp;';
-
-			if (!empty($draft['sticky']))
-				echo '<img src="', $settings['images_url'], '/icons/quick_sticky.png" alt="', $txt['sticky_topic'], '" title="', $txt['sticky_topic'], '" />';
-
-			if (!empty($draft['locked']))
-				echo '<img src="', $settings['images_url'], '/icons/quick_lock.png" alt="', $txt['locked_topic'], '" title="', $txt['locked_topic'], '" />';
-
-			echo '
-							</h5>
-							<span class="smalltext">&#171;&nbsp;<strong>', $txt['on'], ':</strong> ', $draft['time'], '&nbsp;&#187;</span>
-						</div>
-						<div class="list_posts">
-							', $draft['body'], '
-						</div>
-					</div>
-					<div class="floatright">
-						<ul class="reset smalltext quickbuttons">
-							<li><a href="', $scripturl, '?action=post;', (empty($draft['topic']['id']) ? 'board=' . $draft['board']['id'] : 'topic=' . $draft['topic']['id']), '.0;id_draft=', $draft['id_draft'], '" class="reply_button"><span>', $txt['draft_edit'], '</span></a></li>
-							<li><a href="', $scripturl, '?action=profile;u=', $context['member']['id'], ';area=showdrafts;delete=', $draft['id_draft'], ';', $context['session_var'], '=', $context['session_id'], '" onclick="return confirm(\'', $txt['draft_remove'], '?\');" class="remove_button"><span>', $txt['draft_delete'], '</span></a></li>
-						</ul>
-					</div>
-				</div>
-			</div>';
-		}
-	}
-
-	// Show page numbers.
-	echo '
-		<div class="pagesection" style="margin-bottom: 0;">
+		<div class="pagesection">
 			<div class="pagelinks">', $context['page_index'], '</div>
 		</div>';
 }

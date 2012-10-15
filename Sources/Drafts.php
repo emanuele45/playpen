@@ -625,10 +625,11 @@ function showProfileDrafts($memID, $draft_type = 0)
 		$row['body'] = parse_bbc($row['body'], $row['smileys_enabled'], 'draft' . $row['id_draft']);
 
 		// And the array...
-		$context['drafts'][$counter += $reverse ? -1 : 1] = array(
+		$context['posts'][$counter += $reverse ? -1 : 1] = array(
 			'body' => $row['body'],
 			'counter' => $counter,
 			'alternate' => $counter % 2,
+			'approved' => 1,
 			'board' => array(
 				'name' => $row['bname'],
 				'id' => $row['id_board']
@@ -650,9 +651,9 @@ function showProfileDrafts($memID, $draft_type = 0)
 
 	// If the drafts were retrieved in reverse order, get them right again.
 	if ($reverse)
-		$context['drafts'] = array_reverse($context['drafts'], true);
+		$context['posts'] = array_reverse($context['posts'], true);
 
-	$context['sub_template'] = 'showDrafts';
+	$context['sub_template'] = 'showPosts';
 }
 
 /**
