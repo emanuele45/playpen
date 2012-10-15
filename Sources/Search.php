@@ -235,6 +235,49 @@ function PlushSearch1()
 	call_integration_hook('integrate_search');
 }
 
+
+
+/**
+ * Stores all the informations regarding the weigth factors
+ *
+ * @param $return_keys (boolean) if true returns an array with the search keys (default: false)
+ */
+function search_weigth_factors($return_keys = false)
+{
+	$weight_factors = array(
+		'search_weight_frequency' => array(
+			'search' => 'COUNT(*) / (MAX(t.num_replies) + 1)',
+			'results' => '(t.num_replies + 1)',
+		),
+		'search_weight_age' => array(
+			'search' => 'CASE WHEN MAX(m.id_msg) < {int:min_msg} THEN 0 ELSE (MAX(m.id_msg) - {int:min_msg}) / {int:recent_message} END',
+			'results' => 'CASE WHEN t.id_first_msg < {int:min_msg} THEN 0 ELSE (t.id_first_msg - {int:min_msg}) / {int:recent_message} END',
+		),
+		'search_weight_length' => array(
+			'search' => 'CASE WHEN MAX(t.num_replies) < {int:huge_topic_posts} THEN MAX(t.num_replies) / {int:huge_topic_posts} ELSE 1 END',
+			'results' => 'CASE WHEN t.num_replies < {int:huge_topic_posts} THEN t.num_replies / {int:huge_topic_posts} ELSE 1 END',
+		),
+		'search_weight_subject' => array(
+			'search' => 0,
+			'results' => 0,
+		),
+		'search_weight_first_message' => array(
+			'search' => 'CASE WHEN MIN(m.id_msg) = MAX(t.id_first_msg) THEN 1 ELSE 0 END',
+		),
+		'search_weight_sticky' => array(
+			'search' => 'MAX(t.is_sticky)',
+			'results' => 't.is_sticky',
+		),
+	);
+
+	call_integration_hook('integrate_search_weights', array($weight_factors));
+
+	if ($return_keys)
+		return array_keys($weight_factors);
+	else
+		return $weight_factors;
+}
+
 /**
  * Gather the results and show them.
  * What it does:
@@ -266,39 +309,13 @@ function PlushSearch2()
 		die;
 	}
 
-	$weight_factors = array(
-		'frequency' => array(
-			'search' => 'COUNT(*) / (MAX(t.num_replies) + 1)',
-			'results' => '(t.num_replies + 1)',
-		),
-		'age' => array(
-			'search' => 'CASE WHEN MAX(m.id_msg) < {int:min_msg} THEN 0 ELSE (MAX(m.id_msg) - {int:min_msg}) / {int:recent_message} END',
-			'results' => 'CASE WHEN t.id_first_msg < {int:min_msg} THEN 0 ELSE (t.id_first_msg - {int:min_msg}) / {int:recent_message} END',
-		),
-		'length' => array(
-			'search' => 'CASE WHEN MAX(t.num_replies) < {int:huge_topic_posts} THEN MAX(t.num_replies) / {int:huge_topic_posts} ELSE 1 END',
-			'results' => 'CASE WHEN t.num_replies < {int:huge_topic_posts} THEN t.num_replies / {int:huge_topic_posts} ELSE 1 END',
-		),
-		'subject' => array(
-			'search' => 0,
-			'results' => 0,
-		),
-		'first_message' => array(
-			'search' => 'CASE WHEN MIN(m.id_msg) = MAX(t.id_first_msg) THEN 1 ELSE 0 END',
-		),
-		'sticky' => array(
-			'search' => 'MAX(t.is_sticky)',
-			'results' => 't.is_sticky',
-		),
-	);
-
-	call_integration_hook('integrate_search_weights', array($weight_factors));
+	$weight_factors = search_weigth_factors();
 
 	$weight = array();
 	$weight_total = 0;
 	foreach ($weight_factors as $weight_factor => $value)
 	{
-		$weight[$weight_factor] = empty($modSettings['search_weight_' . $weight_factor]) ? 0 : (int) $modSettings['search_weight_' . $weight_factor];
+		$weight[$weight_factor] = empty($modSettings[$weight_factor]) ? 0 : (int) $modSettings[$weight_factor];
 		$weight_total += $weight[$weight_factor];
 	}
 
@@ -591,7 +608,7 @@ function PlushSearch2()
 		'num_replies',
 		'id_msg',
 	);
-	call_integration_hook('integrate_search_sort_columns', array($sort_columns));
+
 	if (empty($search_params['sort']) && !empty($_REQUEST['sort']))
 		list ($search_params['sort'], $search_params['sort_dir']) = array_pad(explode('|', $_REQUEST['sort']), 2, '');
 	$search_params['sort'] = !empty($search_params['sort']) && in_array($search_params['sort'], $sort_columns) ? $search_params['sort'] : 'relevance';
@@ -605,9 +622,6 @@ function PlushSearch2()
 	$minMsg = (int) ((1 - $recentPercentage) * $modSettings['maxMsgID']);
 	$recentMsg = $modSettings['maxMsgID'] - $minMsg;
 
-	// *** Parse the search query
-	call_integration_hook('integrate_search_params', array($search_params));
-
 	/*
 	 * Unfortunately, searching for words like this is going to be slow, so we're blacklisting them.
 	 *
@@ -615,7 +629,7 @@ function PlushSearch2()
 	 * @todo Maybe only blacklist if they are the only word, or "any" is used?
 	 */
 	$blacklisted_words = array('img', 'url', 'quote', 'www', 'http', 'the', 'is', 'it', 'are', 'if');
-	call_integration_hook('integrate_search_blacklisted_words', array($blacklisted_words));
+	call_integration_hook('integrate_search_params', array($sort_columns, $search_params, $blacklisted_words));
 
 	// What are we searching for?
 	if (empty($search_params['search']))
@@ -2114,7 +2128,7 @@ function prepareSearchContext($reset = false)
 	);
 	$counter++;
 
-	call_integration_hook('integrate_search_message_context', array($counter, $output));
+	call_integration_hook('integrate_search_message_context', array($output, $message, $counter));
 
 	return $output;
 }

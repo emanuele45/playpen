@@ -152,21 +152,15 @@ function EditSearchSettings($return_config = false)
  */
 function EditWeights()
 {
-	global $txt, $context, $modSettings;
+	global $txt, $context, $modSettings, $sourcedir;
 
 	$context['page_title'] = $txt['search_weights_title'];
 	$context['sub_template'] = 'modify_weights';
 
-	$factors = array(
-		'search_weight_frequency',
-		'search_weight_age',
-		'search_weight_length',
-		'search_weight_subject',
-		'search_weight_first_message',
-		'search_weight_sticky',
-	);
+	require_once($sourcedir . 'Search.php');
 
-	call_integration_hook('integrate_modify_search_weights', array($factors));
+	$factors = search_weigth_factors();
+	// The hook is already called in the search_weigth_factors function
 
 	// A form was submitted.
 	if (isset($_POST['save']))
