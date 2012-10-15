@@ -1290,7 +1290,7 @@ function prepareDisplayContext($reset = false)
 	if (!empty($output['modified']['name']))
 		$output['modified']['last_edit_text'] = sprintf($txt['last_edit_by'], $output['modified']['time'], $output['modified']['name']);
 
-	call_integration_hook('integrate_prepare_display_context', array($output, $message));
+	call_integration_hook('integrate_prepare_display_context', array($output, $message, $counter));
 
 	if (empty($options['view_newest_first']))
 		$counter++;
