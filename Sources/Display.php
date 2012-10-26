@@ -1259,6 +1259,12 @@ function prepareDisplayContext($reset = false)
 	// Run BBC interpreter on the message.
 	$message['body'] = parse_bbc($message['body'], $message['smileys_enabled'], $message['id_msg']);
 
+	if ($memberContext[$message['id_member']]['karma']['allow'])
+		$memberContext[$message['id_member']]['karma'] += array(
+			'url_good' => $scripturl . '?action=modifykarma;sa=applaud;uid=' . $message['id_member'] . ';topic=' . $context['current_topic'] . '.' . $context['start'] . ';m=' . $message['id_msg'] . ';' . $context['session_var'] . '=' . $context['session_id'],
+			'url_bad' => $scripturl . '?action=modifykarma;sa=smite;uid=' . $message['id_member'] . ';topic=' . $context['current_topic'] . '.' . $context['start'] . ';m=' . $message['id_msg'] . ';' . $context['session_var'] . '=' . $context['session_id'],
+		);
+
 	// Compose the memory eat- I mean message array.
 	$output = array(
 		'attachment' => loadAttachmentContext($message['id_msg']),

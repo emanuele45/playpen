@@ -225,7 +225,8 @@ function template_folder()
 				if ($message['member']['karma']['allow'])
 					echo '
 						<li class="karma_allow">
-							<a href="', $scripturl, '?action=modifykarma;sa=applaud;uid=', $message['member']['id'], ';f=', $context['folder'], ';start=', $context['start'], $context['current_label_id'] != -1 ? ';l=' . $context['current_label_id'] : '', ';pm=', $message['id'], ';', $context['session_var'], '=', $context['session_id'], '">', $modSettings['karmaApplaudLabel'], '</a> <a href="', $scripturl, '?action=modifykarma;sa=smite;uid=', $message['member']['id'], ';f=', $context['folder'], ';start=', $context['start'], $context['current_label_id'] != -1 ? ';l=' . $context['current_label_id'] : '', ';pm=', $message['id'], ';', $context['session_var'], '=', $context['session_id'], '">', $modSettings['karmaSmiteLabel'], '</a>
+							<a href="', $message['member']['karma']['url_good'], '">', $modSettings['karmaApplaudLabel'], '</a>
+							<a href="', $message['member']['karma']['url_bad'], '">', $modSettings['karmaSmiteLabel'], '</a>
 						</li>';
 
 				// Show the member's gender icon?

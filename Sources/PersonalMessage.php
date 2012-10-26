@@ -977,6 +977,12 @@ function prepareMessageContext($type = 'subject', $reset = false)
 	// Run UBBC interpreter on the message.
 	$message['body'] = parse_bbc($message['body'], true, 'pm' . $message['id_pm']);
 
+	if ($memberContext[$message['id_member_from']]['karma']['allow'])
+		$memberContext[$message['id_member_from']]['karma'] += array(
+			'url_good' => $scripturl . '?action=modifykarma;sa=applaud;uid=' . $message['id_member_from'] . ';f=' . $context['folder'] . ';start=' . $context['start'] . ($context['current_label_id'] != -1 ? ';l=' . $context['current_label_id'] : '') . ';pm=' . $message['id_pm'] . ';' . $context['session_var'] . '=' . $context['session_id'],
+			'url_bad' => $scripturl . '?action=modifykarma;sa=smite;uid=' . $message['id_member_from'] . ';f=' . $context['folder'] . ';start=' . $context['start'] . ($context['current_label_id'] != -1 ? ';l=' . $context['current_label_id'] : '') . ';pm=' . $message['id_pm'] . ';' . $context['session_var'] . '=' . $context['session_id'],
+		);
+
 	// Send the array.
 	$output = array(
 		'alternate' => $counter % 2,
