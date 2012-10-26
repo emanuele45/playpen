@@ -1247,7 +1247,15 @@ function BanBrowseTriggers()
 		'additional_rows' => array(
 			array(
 				'position' => 'above_column_headers',
-				'value' => '<a href="' . $scripturl . '?action=admin;area=ban;sa=browse;entity=ip">' . ($context['selected_entity'] == 'ip' ? '<img src="' . $settings['images_url'] . '/selected.png" alt="&gt;" /> ' : '') . $txt['ip'] . '</a>&nbsp;|&nbsp;<a href="' . $scripturl . '?action=admin;area=ban;sa=browse;entity=hostname">' . ($context['selected_entity'] == 'hostname' ? '<img src="' . $settings['images_url'] . '/selected.png" alt="&gt;" /> ' : '') . $txt['hostname'] . '</a>&nbsp;|&nbsp;<a href="' . $scripturl . '?action=admin;area=ban;sa=browse;entity=email">' . ($context['selected_entity'] == 'email' ? '<img src="' . $settings['images_url'] . '/selected.png" alt="&gt;" /> ' : '') . $txt['email'] . '</a>&nbsp;|&nbsp;<a href="' . $scripturl . '?action=admin;area=ban;sa=browse;entity=member">' . ($context['selected_entity'] == 'member' ? '<img src="' . $settings['images_url'] . '/selected.png" alt="&gt;" /> ' : '') . $txt['username'] . '</a>',
+				'value' => str_replace(array('ip_image', 'hostname_image', 'email_image', 'member_image'), array(''), str_replace($context['selected_entity'] . '_image', '
+					<img src="' . $settings['images_url'] . '/selected.png" alt="&gt;" /> ', '
+				<a href="' . $scripturl . '?action=admin;area=ban;sa=browse;entity=' . implode('</a>&nbsp;|&nbsp;
+				<a href="' . $scripturl . '?action=admin;area=ban;sa=browse;entity=', array(
+					'ip">ip_image' . $txt['ip'],
+					'hostname">hostname_image' . $txt['hostname'],
+					'email">email_image' . $txt['email'],
+					'member">member_image' . $txt['username'],
+				)) . '</a>')),
 			),
 			array(
 				'position' => 'bottom_of_list',
