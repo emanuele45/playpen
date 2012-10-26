@@ -565,9 +565,27 @@ function template_maintain_topics()
 	}
 	echo '
 					</select></p>
-					<input type="submit" value="', $txt['move_topics_now'], '" onclick="if (document.getElementById(\'id_board_from\').options[document.getElementById(\'id_board_from\').selectedIndex].disabled || document.getElementById(\'id_board_from\').options[document.getElementById(\'id_board_to\').selectedIndex].disabled) return false; var confirmText = \'', $txt['move_topics_confirm'] . '\'; return confirm(confirmText.replace(/%board_from%/, document.getElementById(\'id_board_from\').options[document.getElementById(\'id_board_from\').selectedIndex].text.replace(/^=+&gt;&nbsp;/, \'\')).replace(/%board_to%/, document.getElementById(\'id_board_to\').options[document.getElementById(\'id_board_to\').selectedIndex].text.replace(/^=+&gt;&nbsp;/, \'\')));" class="button_submit" />
+					<input type="submit" value="', $txt['move_topics_now'], '" onclick="return confirm_move();" class="button_submit" />
 					<input type="hidden" name="', $context['session_var'], '" value="', $context['session_id'], '" />
 					<input type="hidden" name="', $context['admin-maint_token_var'], '" value="', $context['admin-maint_token'], '" />
+					<script type="text/javascript"><!-- // --><![CDATA[
+						function confirm_move ()
+						{
+							var board_from = document.getElementById(\'id_board_from\');
+							var board_to = document.getElementById(\'id_board_to\');
+
+							// Options disabled? Stop here.
+							if (board_from.options[board_from.selectedIndex].disabled || board_to.options[board_to.selectedIndex].disabled)
+								return false;
+
+							// Same board? Useless to proceed.
+							if (board_from.options[board_from.selectedIndex].value == board_to.options[board_to.selectedIndex].value)
+								return false;
+
+							var confirmText = ', JavaScriptEscape($txt['move_topics_confirm']), ';
+							return confirm(confirmText.replace(/%board_from%/, board_from.options[board_from.selectedIndex].text.replace(/^=+>\s/, \'\')).replace(/%board_to%/, board_to.options[board_to.selectedIndex].text.replace(/^=+>\s/, \'\')));
+						}
+					// ]]></script>
 				</form>
 			</div>
 		</div>
