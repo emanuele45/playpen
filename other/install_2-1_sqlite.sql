@@ -1430,7 +1430,6 @@ CREATE INDEX {$db_prefix}member_logins_time ON {$db_prefix}member_logins (time);
 #
 
 CREATE TABLE {$db_prefix}message_icons (
-  id_icon integer primary key,
   title varchar(80) NOT NULL default '',
   filename varchar(80) NOT NULL default '',
   id_board smallint NOT NULL default '0',
@@ -1442,6 +1441,7 @@ CREATE TABLE {$db_prefix}message_icons (
 #
 
 CREATE INDEX {$db_prefix}message_icons_id_board ON {$db_prefix}message_icons (id_board);
+CREATE INDEX {$db_prefix}message_icons_messageicon ON {$db_prefix}message_icons (filename, id_board, icon_order);
 
 #
 # Dumping data for table `message_icons`

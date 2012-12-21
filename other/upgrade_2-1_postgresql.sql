@@ -334,3 +334,8 @@ if (@$modSettings['smfVersion'] < '2.1')
 }
 ---}
 ---#
+
+---# Removing id_icon column...
+ALTER TABLE {$db_prefix}message_icons
+DROP COLUMN IF EXISTS id_icon;
+---#

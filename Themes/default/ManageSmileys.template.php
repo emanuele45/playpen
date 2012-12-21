@@ -448,7 +448,7 @@ function template_editicon()
 
 	echo '
 	<div id="admincenter">
-		<form id="messageIcons" name="messageIcons" action="', $scripturl, '?action=admin;area=smileys;sa=editicon;icon_name=', $context['new_icon'] ? '0' : $context['icon']['icon_code'], '" method="post" accept-charset="', $context['character_set'], '">
+		<form id="messageIcons" name="messageIcons" action="', $scripturl, '?action=admin;area=smileys;sa=editicon;icon_code=', $context['new_icon'] ? '0' : $context['icon']['icon_code'], '" method="post" accept-charset="', $context['character_set'], '">
 			<div class="cat_bar">
 				<h3 class="catbg">
 					', $context['new_icon'] ? $txt['icons_new_icon'] : $txt['icons_edit_icon'], '
@@ -522,10 +522,10 @@ function template_editicon()
 								</ul>
 							</fieldset>
 							<a href="javascript:void(0);" onclick="document.getElementById(\'message_icons_boards\').style.display = \'block\'; document.getElementById(\'message_icons_boards_link\').style.display = \'none\'; return false;" id="message_icons_boards_link" style="display: none;">[ ', $txt['icons_select_usable_boards'], ' ]</a>
-							<script type="text/javascript"><!-- // --><![CDA', 'TA[', '
+							<script type="text/javascript"><!-- // --><![CDATA[', '
 								document.getElementById("message_icons_boards_link").style.display = "', $display_boards ? 'none' : '', '";
 								document.getElementById("message_icons_boards").style.display = "', $display_boards ? '' : 'none', '";
-							// ]', ']></script>
+							// ]]></script>
 						</dd>
 						<dt>
 							<strong><label for="icon_location">', $txt['smileys_location'], '</label>: </strong>
@@ -547,14 +547,14 @@ function template_editicon()
 
 	if (!$context['new_icon'])
 		echo '
-					<input type="hidden" name="icon" value="', $context['icon']['id'], '" />';
+					<input type="hidden" name="icon" value="', $context['icon']['id_icon'], '" />';
 
 	echo '
 					<hr class="hrcolor" />
 
 					<input type="submit" name="icons_save" value="', $txt['smileys_save'], '" onclick="return delConf();" class="button_submit" />
 					<input type="hidden" name="', $context['session_var'], '" value="', $context['session_id'], '" />
-					<script type="text/javascript"><!-- // --><![CD', 'ATA[
+					<script type="text/javascript"><!-- // --><![CDATA[
 						function delConf()
 						{
 							var all = document.getElementById(\'icon_view_in_all\');
@@ -568,7 +568,7 @@ function template_editicon()
 
 							return confirm(\'', $txt['icons_delete_confirm'], '\');
 						}
-					// ]', ']></script>
+					// ]]></script>
 				</div>
 			</div>
 		</form>

@@ -1318,12 +1318,11 @@ CREATE TABLE {$db_prefix}member_logins (
 #
 
 CREATE TABLE {$db_prefix}message_icons (
-  id_icon smallint(5) unsigned NOT NULL auto_increment,
   title varchar(80) NOT NULL default '',
   filename varchar(80) NOT NULL default '',
   id_board smallint(5) unsigned NOT NULL default '0',
   icon_order smallint(5) unsigned NOT NULL default '0',
-  PRIMARY KEY (id_icon),
+  UNIQUE KEY messageicon (filename, id_board, icon_order),
   KEY id_board (id_board)
 ) ENGINE=MyISAM;
 
