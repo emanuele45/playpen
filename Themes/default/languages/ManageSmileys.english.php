@@ -86,7 +86,10 @@ $txt['icons_edit_icons_all_boards'] = 'Available in all boards';
 $txt['icons_board'] = 'Board';
 $txt['icons_confirm'] = 'Are you sure you wish to remove these icons?\\n\\nNote this will only stop new posters from using the icons, the images will remain.';
 $txt['icons_add_new'] = 'Add new icon';
-
+$txt['icons_boards_desc'] = 'Boards the icon can be used';
+$txt['icons_select_usable_boards'] = 'Show boards';
+$txt['icons_delete_confirm'] = 'This will delete the message icon, are you sure?';
+ 
 $txt['icons_edit_icon'] = 'Edit message icon';
 $txt['icons_new_icon'] = 'New message icon';
 $txt['icons_location_first_icon'] = 'As first icon';

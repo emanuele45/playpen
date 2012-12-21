@@ -448,7 +448,7 @@ function template_editicon()
 
 	echo '
 	<div id="admincenter">
-		<form action="', $scripturl, '?action=admin;area=smileys;sa=editicon;icon=', $context['new_icon'] ? '0' : $context['icon']['id'], '" method="post" accept-charset="', $context['character_set'], '">
+		<form id="messageIcons" name="messageIcons" action="', $scripturl, '?action=admin;area=smileys;sa=editicon;icon_name=', $context['new_icon'] ? '0' : $context['icon']['icon_code'], '" method="post" accept-charset="', $context['character_set'], '">
 			<div class="cat_bar">
 				<h3 class="catbg">
 					', $context['new_icon'] ? $txt['icons_new_icon'] : $txt['icons_edit_icon'], '
@@ -470,7 +470,7 @@ function template_editicon()
 							<strong><label for="icon_filename">', $txt['smileys_filename'], '</label>: </strong><br /><span class="smalltext">', $txt['icons_filename_all_png'], '</span>
 						</dt>
 						<dd>
-							<input type="text" name="icon_filename" id="icon_filename" value="', !empty($context['icon']['filename']) ? $context['icon']['filename'] . '.gif' : '', '" class="input_text" />
+							<input type="text" name="icon_filename" id="icon_filename" value="', !empty($context['icon']['filename']) ? $context['icon']['filename'] . '.png' : '', '" class="input_text" />
 						</dd>
 						<dt>
 							<strong><label for="icon_description">', $txt['smileys_description'], '</label>: </strong>
@@ -482,21 +482,50 @@ function template_editicon()
 							<strong><label for="icon_board_select">', $txt['icons_board'], '</label>: </strong>
 						</dt>
 						<dd>
-							<select name="icon_board" id="icon_board_select">
-								<option value="0"', empty($context['icon']['board_id']) ? ' selected="selected"' : '', '>', $txt['icons_edit_icons_all_boards'], '</option>';
+							<label for="icon_view_in_all"><input type="checkbox" name="icon_view_in_all" id="icon_view_in_all" ', !empty($context['icon']['view_in_all']) ? 'checked="checked" ' : '', 'class="input_check" />', $txt['icons_edit_icons_all_boards'],'</label><br />
+							<fieldset id="message_icons_boards">
+								<legend><a href="javascript:void(0);" onclick="document.getElementById(\'message_icons_boards\').style.display = \'none\';document.getElementById(\'message_icons_boards_link\').style.display = \'block\'; return false;">', $txt['icons_boards_desc'], '</a></legend>
+								<ul class="ignoreboards floatleft">';
+	$display_boards = false;
 
 	foreach ($context['categories'] as $category)
 	{
 		echo '
-								<optgroup label="', $category['name'], '">';
+									<li class="category">
+										<a href="javascript:void(0);" onclick="selectBoards([', implode(', ', $category['child_ids']), ']); return false;">', $category['name'], '</a>
+										<ul>';
 		foreach ($category['boards'] as $board)
+		{
 			echo '
-									<option value="', $board['id'], '"', $board['selected'] ? ' selected="selected"' : '', '>', $board['child_level'] > 0 ? str_repeat('==', $board['child_level'] - 1) . '=&gt;' : '', ' ', $board['name'], '</option>';
+											<li class="board" style="margin-', $context['right_to_left'] ? 'right' : 'left', ': ', $board['child_level'], 'em;">
+												<input type="checkbox" name="boardaccess[]" id="brd', $board['id'], '" value="', $board['id'], '" ', $board['selected'] ? ' checked="checked" ' : '', ' class="input_check" /> <label for="brd', $board['id'], '">', $board['name'], '</label>
+											</li>';
+			$display_boards = $display_boards || $board['selected'];
+		}
 		echo '
-								</optgroup>';
+										</ul>
+										<script type="text/javascript"><!-- // --><![CD', 'ATA[
+											function selectBoards(ids)
+											{
+												var toggle = true;
+
+												for (i = 0; i < ids.length; i++)
+													toggle = toggle & document.getElementById(["brd" + ids[i]]).checked;
+
+												for (i = 0; i < ids.length; i++)
+													document.getElementById(["brd" + ids[i]]).checked = !toggle;
+											}
+										// ]', ']></script>
+									</li>';
 	}
 	echo '
-							</select>
+								</ul>
+							</fieldset>
+							<a href="javascript:void(0);" onclick="document.getElementById(\'message_icons_boards\').style.display = \'block\'; document.getElementById(\'message_icons_boards_link\').style.display = \'none\'; return false;" id="message_icons_boards_link" style="display: none;">[ ', $txt['icons_select_usable_boards'], ' ]</a>
+							<script type="text/javascript"><!-- // --><![CDA', 'TA[', '
+								document.getElementById("message_icons_boards_link").style.display = "', $display_boards ? 'none' : '', '";
+								document.getElementById("message_icons_boards").style.display = "', $display_boards ? '' : 'none', '";
+							// ]', ']></script>
 						</dd>
 						<dt>
 							<strong><label for="icon_location">', $txt['smileys_location'], '</label>: </strong>
@@ -507,7 +536,7 @@ function template_editicon()
 
 	// Print the list of all the icons it can be put after...
 	foreach ($context['icons'] as $id => $data)
-		if (empty($context['icon']['id']) || $id != $context['icon']['id'])
+		if (empty($context['icon']['icon_code']) || $id != $context['icon']['icon_code'])
 			echo '
 								<option value="', $id, '"', !empty($context['icon']['after']) && $id == $context['icon']['after'] ? ' selected="selected"' : '', '>', $txt['icons_location_after'], ': ', $data['title'], '</option>';
 
@@ -522,8 +551,24 @@ function template_editicon()
 
 	echo '
 					<hr class="hrcolor" />
-					<input type="submit" name="icons_save" value="', $txt['smileys_save'], '" class="button_submit" />
+
+					<input type="submit" name="icons_save" value="', $txt['smileys_save'], '" onclick="return delConf();" class="button_submit" />
 					<input type="hidden" name="', $context['session_var'], '" value="', $context['session_id'], '" />
+					<script type="text/javascript"><!-- // --><![CD', 'ATA[
+						function delConf()
+						{
+							var all = document.getElementById(\'icon_view_in_all\');
+							var boards = document.getElementsByName(\'boardaccess[]\');
+							if (all.checked)
+								return true;
+
+							for (var i = 0;i < boards.length; i++)
+								if (boards[i].checked)
+									return true;
+
+							return confirm(\'', $txt['icons_delete_confirm'], '\');
+						}
+					// ]', ']></script>
 				</div>
 			</div>
 		</form>

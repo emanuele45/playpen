@@ -75,11 +75,11 @@ function getBoardList($boardListOptions = array())
 					'boards' => array(),
 				);
 
-			$return_value[$row['id_cat']]['boards'][] = array(
+			$return_value[$row['id_cat']]['boards'][$row['id_board']] = array(
 				'id' => $row['id_board'],
 				'name' => $row['board_name'],
 				'child_level' => $row['child_level'],
-				'selected' => isset($boardListOptions['selected_board']) && $boardListOptions['selected_board'] == $row['id_board'],
+				'selected' => isset($boardListOptions['selected_board']) && ((is_array($boardListOptions['selected_board']) && in_array($row['id_board'], $boardListOptions['selected_board'])) || ($boardListOptions['selected_board'] == $row['id_board'])),
 			);
 		}
 	}
