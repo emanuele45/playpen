@@ -1973,6 +1973,17 @@ function EditMessageIcons()
 				$context['new_icon'] = true;
 		}
 
+		$context['available_icons'] = getAvailableMessageIcons();
+		foreach ($context['available_icons'] as $key => $val)
+		{
+			$context['available_icons'][$key] += array(
+				'selected' => !empty($context['icon']) && $val['name'] == $context['icon']['filename'],
+				'not_used' => empty($context['icons'][$val['name']]['id_board']),
+			);
+			if (!empty($context['icon']) && $val['name'] == $context['icon']['filename'])
+				$context['available_icons'][$key]['not_used'] = true;
+		}
+
 		// Get a list of boards needed for assigning this icon to a specific board.
 		$boardListOptions = array(
 			'use_permissions' => true,
@@ -2042,6 +2053,22 @@ function list_getMessageIcons()
 	$smcFunc['db_free_result']($request);
 
 	return $message_icons;
+}
+
+function getAvailableMessageIcons()
+{
+	global $settings;
+
+	$images = array_unique(array_merge(glob($settings['theme_dir'] . '/images/post/*.png'), glob($settings['default_theme_dir'] . '/images/post/*.png')));
+
+	$return = array();
+	foreach ($images as $image)
+		$return[] = array(
+			'fullname' => basename($image),
+			'name' => substr(basename($image), 0, -4),
+		);
+
+	return $return;
 }
 
 /**

@@ -470,7 +470,14 @@ function template_editicon()
 							<strong><label for="icon_filename">', $txt['smileys_filename'], '</label>: </strong><br /><span class="smalltext">', $txt['icons_filename_all_png'], '</span>
 						</dt>
 						<dd>
-							<input type="text" name="icon_filename" id="icon_filename" value="', !empty($context['icon']['filename']) ? $context['icon']['filename'] . '.png' : '', '" class="input_text" />
+							<select name="icon_filename" id="icon_filename">';
+
+	foreach ($context['available_icons'] as $image)
+		echo '
+								<option value="', $image['name'], '"', $image['selected'] ? ' selected=selected' : '', !$image['not_used'] ? ' disabled="disabled"' : '', '>', $image['fullname'], '</option>';
+
+	echo '
+							</select>
 						</dd>
 						<dt>
 							<strong><label for="icon_description">', $txt['smileys_description'], '</label>: </strong>
