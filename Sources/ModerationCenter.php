@@ -124,6 +124,16 @@ function ModerationMain($dont_call = false)
 						'closed' => array($txt['mc_reportedp_closed']),
 					),
 				),
+				'pm_reports' => array(
+					'label' => $txt['mc_reported_pms'],
+					'enabled' => $user_info['is_admin'],
+					'file' => 'ModerationCenter.php',
+					'function' => 'ReportedPosts',
+					'subsections' => array(
+						'open' => array($txt['mc_reportedp_active']),
+						'closed' => array($txt['mc_reportedp_closed']),
+					),
+				),
 			),
 		),
 		'groups' => array(
@@ -453,14 +463,12 @@ function ModBlockReportedPosts()
 				LEFT JOIN {db_prefix}members AS mem ON (mem.id_member = lr.id_member)
 			WHERE ' . ($user_info['mod_cache']['bq'] == '1=1' || $user_info['mod_cache']['bq'] == '0=1' ? $user_info['mod_cache']['bq'] : 'lr.' . $user_info['mod_cache']['bq']) . '
 				AND lr.closed = {int:not_closed}
-				AND lr.ignore_all = {int:not_ignored}' . ($user_info['is_admin'] ? '' : '
-				AND lr.id_pm = {int:not_pm}') . '
+				AND lr.ignore_all = {int:not_ignored}
 			ORDER BY lr.time_updated DESC
 			LIMIT 10',
 			array(
 				'not_closed' => 0,
 				'not_ignored' => 0,
-				'not_pm' => 0,
 			)
 		);
 		$reported_posts = array();
@@ -564,9 +572,17 @@ function ReportedPosts()
 	if ($user_info['mod_cache']['bq'] == '0=1')
 		isAllowedTo('moderate_forum');
 
+	// This should not be needed...
+	$show_pms = false;
+	if ($context['admin_area'] == 'pm_reports')
+	{
+		$show_pms = true;
+		isAllowedTo('admin_forum');
+	}
+
 	// Are they wanting to view a particular report?
 	if (!empty($_REQUEST['report']))
-		return ModReport();
+		return ModReport($show_pm);
 
 	// Set up the comforting bits...
 	$context['page_title'] = $txt['mc_reported_posts'];
@@ -596,7 +612,7 @@ function ReportedPosts()
 
 		// Time to update.
 		updateSettings(array('last_mod_report_action' => time()));
-		recountOpenReports();
+		recountOpenReports($show_pms);
 	}
 	elseif (isset($_POST['close']) && isset($_POST['close_selected']))
 	{
@@ -622,7 +638,7 @@ function ReportedPosts()
 
 			// Time to update.
 			updateSettings(array('last_mod_report_action' => time()));
-			recountOpenReports();
+			recountOpenReports($show_pms);
 		}
 	}
 
@@ -630,17 +646,19 @@ function ReportedPosts()
 	$request = $smcFunc['db_query']('', '
 		SELECT COUNT(*)
 		FROM {db_prefix}log_reported AS lr
-		WHERE lr.closed = {int:view_closed}
+		WHERE lr.closed = {int:view_closed}' . ($show_pms ? '' : '
+			AND id_pm = {int:not_a_pm}') . '
 			AND ' . ($user_info['mod_cache']['bq'] == '1=1' || $user_info['mod_cache']['bq'] == '0=1' ? $user_info['mod_cache']['bq'] : 'lr.' . $user_info['mod_cache']['bq']),
 		array(
 			'view_closed' => $context['view_closed'],
+			'not_a_pm' => 0,
 		)
 	);
 	list ($context['total_reports']) = $smcFunc['db_fetch_row']($request);
 	$smcFunc['db_free_result']($request);
 
 	// So, that means we can page index, yes?
-	$context['page_index'] = constructPageIndex($scripturl . '?action=moderate;area=reports' . ($context['view_closed'] ? ';sa=closed' : ''), $_GET['start'], $context['total_reports'], 10);
+	$context['page_index'] = constructPageIndex($scripturl . '?action=moderate;area=' . $context['admin_area'] . ($context['view_closed'] ? ';sa=closed' : ''), $_GET['start'], $context['total_reports'], 10);
 	$context['start'] = $_GET['start'];
 
 	// By George, that means we in a position to get the reports, golly good.
@@ -650,12 +668,14 @@ function ReportedPosts()
 			IFNULL(mem.real_name, lr.membername) AS author_name, IFNULL(mem.id_member, 0) AS id_author
 		FROM {db_prefix}log_reported AS lr
 			LEFT JOIN {db_prefix}members AS mem ON (mem.id_member = lr.id_member)
-		WHERE lr.closed = {int:view_closed}
+		WHERE lr.closed = {int:view_closed}' . ($show_pms ? '' : '
+			AND id_pm = {int:not_a_pm}') . '
 			AND ' . ($user_info['mod_cache']['bq'] == '1=1' || $user_info['mod_cache']['bq'] == '0=1' ? $user_info['mod_cache']['bq'] : 'lr.' . $user_info['mod_cache']['bq']) . '
 		ORDER BY lr.time_updated DESC
 		LIMIT ' . $context['start'] . ', 10',
 		array(
 			'view_closed' => $context['view_closed'],
+			'not_a_pm' => 0,
 		)
 	);
 	$context['reports'] = array();
@@ -667,7 +687,7 @@ function ReportedPosts()
 			'id' => $row['id_report'],
 			'alternate' => $i % 2,
 			'topic_href' => $scripturl . '?topic=' . $row['id_topic'] . '.msg' . $row['id_msg'] . '#msg' . $row['id_msg'],
-			'report_href' => $scripturl . '?action=moderate;area=reports;report=' . $row['id_report'],
+			'report_href' => $scripturl . '?action=moderate;area=' . $context['admin_area'] . ';report=' . $row['id_report'],
 			'author' => array(
 				'id' => $row['id_author'],
 				'name' => $row['author_name'],
@@ -749,19 +769,21 @@ function ModerateGroups()
 /**
  * How many open reports do we have?
  */
-function recountOpenReports()
+function recountOpenReports($show_pms = false)
 {
 	global $user_info, $context, $smcFunc;
 
 	$request = $smcFunc['db_query']('', '
 		SELECT COUNT(*)
 		FROM {db_prefix}log_reported
-		WHERE ' . $user_info['mod_cache']['bq'] . '
+		WHERE ' . $user_info['mod_cache']['bq'] . ($show_pms ? '' : '
+			AND id_pm = {int:not_a_pm}') . '
 			AND closed = {int:not_closed}
 			AND ignore_all = {int:not_ignored}',
 		array(
 			'not_closed' => 0,
 			'not_ignored' => 0,
+			'not_a_pm' => 0,
 		)
 	);
 	list ($open_reports) = $smcFunc['db_fetch_row']($request);
@@ -780,7 +802,7 @@ function recountOpenReports()
  * Get details about the moderation report... specified in
  * $_REQUEST['report'].
  */
-function ModReport()
+function ModReport($show_pm = false)
 {
 	global $user_info, $context, $sourcedir, $scripturl, $txt, $smcFunc;
 
@@ -798,11 +820,13 @@ function ModReport()
 			IFNULL(mem.real_name, lr.membername) AS author_name, IFNULL(mem.id_member, 0) AS id_author
 		FROM {db_prefix}log_reported AS lr
 			LEFT JOIN {db_prefix}members AS mem ON (mem.id_member = lr.id_member)
-		WHERE lr.id_report = {int:id_report}
+		WHERE lr.id_report = {int:id_report}' . ($show_pms ? '' : '
+			AND id_pm = {int:not_a_pm}') . '
 			AND ' . ($user_info['mod_cache']['bq'] == '1=1' || $user_info['mod_cache']['bq'] == '0=1' ? $user_info['mod_cache']['bq'] : 'lr.' . $user_info['mod_cache']['bq']) . '
 		LIMIT 1',
 		array(
 			'id_report' => $_REQUEST['report'],
+			'not_a_pm' => 0,
 		)
 	);
 
@@ -838,7 +862,7 @@ function ModReport()
 			);
 
 			// Redirect to prevent double submittion.
-			redirectexit($scripturl . '?action=moderate;area=reports;report=' . $_REQUEST['report']);
+			redirectexit($scripturl . '?action=moderate;area=' . $context['admin_area'] . ';report=' . $_REQUEST['report']);
 		}
 	}
 
@@ -849,7 +873,7 @@ function ModReport()
 		'message_id' => $row['id_msg'],
 		'message_href' => $scripturl . '?msg=' . $row['id_msg'],
 		'message_link' => '<a href="' . $scripturl . '?msg=' . $row['id_msg'] . '">' . $row['subject'] . '</a>',
-		'report_href' => $scripturl . '?action=moderate;area=reports;report=' . $row['id_report'],
+		'report_href' => $scripturl . '?action=moderate;area=' . $context['admin_area'] . ';report=' . $row['id_report'],
 		'author' => array(
 			'id' => $row['id_author'],
 			'name' => $row['author_name'],
@@ -935,7 +959,7 @@ function ModReport()
 		'title' => $txt['mc_modreport_modactions'],
 		'items_per_page' => 15,
 		'no_items_label' => $txt['modlog_no_entries_found'],
-		'base_href' => $scripturl . '?action=moderate;area=reports;report=' . $context['report']['id'],
+		'base_href' => $scripturl . '?action=moderate;area=' . $context['admin_area'] . ';report=' . $context['report']['id'],
 		'default_sort_col' => 'time',
 		'get_items' => array(
 			'function' => 'list_getModLogEntries',
