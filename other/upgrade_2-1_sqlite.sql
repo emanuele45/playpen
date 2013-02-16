@@ -317,3 +317,14 @@ if (@$modSettings['smfVersion'] < '2.1')
 }
 ---}
 ---#
+
+/******************************************************************************/
+--- Altering PM reports...
+/******************************************************************************/
+
+---# Adding new columns to log_reported...
+ALTER TABLE {$db_prefix}log_reported
+ADD COLUMN id_pm INT unsigned NOT NULL DEFAULT '0',
+ADD COLUMN pm_time_sent INT unsigned NOT NULL DEFAULT '0';
+---}
+---#

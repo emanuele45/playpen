@@ -1076,6 +1076,7 @@ CREATE TABLE {$db_prefix}log_reported (
   id_msg int NOT NULL default '0',
   id_topic int NOT NULL default '0',
   id_board smallint NOT NULL default '0',
+  id_pm int NOT NULL default '0',
   id_member int NOT NULL default '0',
   membername varchar(255) NOT NULL,
   subject varchar(255) NOT NULL,
@@ -1085,6 +1086,7 @@ CREATE TABLE {$db_prefix}log_reported (
   num_reports int NOT NULL default '0',
   closed smallint NOT NULL default '0',
   ignore_all smallint NOT NULL default '0'
+  pm_time_sent int NOT NULL default '0',
 );
 
 #

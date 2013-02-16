@@ -453,12 +453,14 @@ function ModBlockReportedPosts()
 				LEFT JOIN {db_prefix}members AS mem ON (mem.id_member = lr.id_member)
 			WHERE ' . ($user_info['mod_cache']['bq'] == '1=1' || $user_info['mod_cache']['bq'] == '0=1' ? $user_info['mod_cache']['bq'] : 'lr.' . $user_info['mod_cache']['bq']) . '
 				AND lr.closed = {int:not_closed}
-				AND lr.ignore_all = {int:not_ignored}
+				AND lr.ignore_all = {int:not_ignored}' . ($user_info['is_admin'] ? '' : '
+				AND lr.id_pm = {int:not_pm}') . '
 			ORDER BY lr.time_updated DESC
 			LIMIT 10',
 			array(
 				'not_closed' => 0,
 				'not_ignored' => 0,
+				'not_pm' => 0,
 			)
 		);
 		$reported_posts = array();

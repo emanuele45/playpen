@@ -528,13 +528,13 @@ function ReportToModerator2()
 			$smcFunc['db_insert']('',
 				'{db_prefix}log_reported',
 				array(
-					'id_msg' => 'int', 'id_topic' => 'int', 'id_board' => 'int', 'id_member' => 'int', 'membername' => 'string',
+					'id_msg' => 'int', 'id_topic' => 'int', 'id_board' => 'int', 'id_pm' => 'int', 'id_member' => 'int', 'membername' => 'string',
 					'subject' => 'string', 'body' => 'string', 'time_started' => 'int', 'time_updated' => 'int',
-					'num_reports' => 'int', 'closed' => 'int',
+					'num_reports' => 'int', 'closed' => 'int', 'pm_time_sent' => 'int',
 				),
 				array(
-					$_POST['msg'], $message['id_topic'], $message['id_board'], $message['id_poster'], $message['real_name'],
-					$message['subject'], $message['body'] , time(), time(), 1, 0,
+					$_POST['msg'], $message['id_topic'], $message['id_board'], 0, $message['id_poster'], $message['real_name'],
+					$message['subject'], $message['body'] , time(), time(), 1, 0,, 0
 				),
 				array('id_report')
 			);

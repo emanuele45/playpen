@@ -3163,6 +3163,11 @@ function ReportMessage()
 		// Check the session before proceeding any further!
 		checkSession('post');
 
+		$poster_comment = strtr($smcFunc['htmlspecialchars']($_POST['reason']), array("\r" => '', "\t" => ''));
+
+		if ($smcFunc['strlen']($poster_comment) > 254)
+			fatal_lang_error('post_too_long', false);
+
 		// First, pull out the message contents, and verify it actually went to them!
 		$request = $smcFunc['db_query']('', '
 			SELECT pm.subject, pm.body, pm.msgtime, pm.id_member_from, IFNULL(m.real_name, pm.from_name) AS sender_name
@@ -3184,6 +3189,38 @@ function ReportMessage()
 			fatal_lang_error('no_access', false);
 		list ($subject, $body, $time, $memberFromID, $memberFromName) = $smcFunc['db_fetch_row']($request);
 		$smcFunc['db_free_result']($request);
+
+		$smcFunc['db_insert']('',
+			'{db_prefix}log_reported',
+			array(
+				'id_msg' => 'int', 'id_topic' => 'int', 'id_board' => 'int', 'id_pm' => 'int', 'id_member' => 'int', 'membername' => 'string',
+				'subject' => 'string', 'body' => 'string', 'time_started' => 'int', 'time_updated' => 'int',
+				'num_reports' => 'int', 'closed' => 'int', 'pm_time_sent' => 'int',
+			),
+			array(
+				0, 0, 0, $context['pm_id'], $memberFromID, $memberFromName,
+				$subject, $body , time(), time(), 1, 0, $time,
+			),
+			array('id_report')
+		);
+		$id_report = $smcFunc['db_insert_id']('{db_prefix}log_reported', 'id_report');
+
+		// Now just add the report...
+		if ($id_report)
+		{
+			$smcFunc['db_insert']('',
+				'{db_prefix}log_reported_comments',
+				array(
+					'id_report' => 'int', 'id_member' => 'int', 'membername' => 'string', 'email_address' => 'string',
+					'member_ip' => 'string', 'comment' => 'string', 'time_sent' => 'int',
+				),
+				array(
+					$id_report, $user_info['id'], $user_info['name'], $user_info['email'],
+					$user_info['ip'], $poster_comment, time(),
+				),
+				array('id_comment')
+			);
+		}
 
 		// Remove the line breaks...
 		$body = preg_replace('~<br ?/?' . '>~i', "\n", $body);
