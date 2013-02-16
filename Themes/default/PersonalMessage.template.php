@@ -1489,25 +1489,6 @@ function template_report_message()
 			<div class="content">
 				<dl class="settings">';
 
-	// If there is more than one admin on the forum, allow the user to choose the one they want to direct to.
-	// @todo Why?
-	if ($context['admin_count'] > 1)
-	{
-		echo '
-					<dt>
-						<strong>', $txt['pm_report_admins'], ':</strong>
-					</dt>
-					<dd>
-						<select name="id_admin">
-							<option value="0">', $txt['pm_report_all_admins'], '</option>';
-		foreach ($context['admins'] as $id => $name)
-			echo '
-							<option value="', $id, '">', $name, '</option>';
-		echo '
-						</select>
-					</dd>';
-	}
-
 	echo '
 					<dt>
 						<strong>', $txt['pm_report_reason'], ':</strong>

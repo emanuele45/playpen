@@ -3132,33 +3132,11 @@ function ReportMessage()
 
 	$context['pm_id'] = $pmsg;
 	$context['page_title'] = $txt['pm_report_title'];
-
 	// If we're here, just send the user to the template, with a few useful context bits.
-	if (!isset($_POST['report']))
-	{
-		$context['sub_template'] = 'report_message';
+	$context['sub_template'] = 'report_message';
 
-		// @todo I don't like being able to pick who to send it to.  Favoritism, etc. sucks.
-		// Now, get all the administrators.
-		$request = $smcFunc['db_query']('', '
-			SELECT id_member, real_name
-			FROM {db_prefix}members
-			WHERE id_group = {int:admin_group} OR FIND_IN_SET({int:admin_group}, additional_groups) != 0
-			ORDER BY real_name',
-			array(
-				'admin_group' => 1,
-			)
-		);
-		$context['admins'] = array();
-		while ($row = $smcFunc['db_fetch_assoc']($request))
-			$context['admins'][$row['id_member']] = $row['real_name'];
-		$smcFunc['db_free_result']($request);
-
-		// How many admins in total?
-		$context['admin_count'] = count($context['admins']);
-	}
 	// Otherwise, let's get down to the sending stuff.
-	else
+	if (isset($_POST['report']))
 	{
 		// Check the session before proceeding any further!
 		checkSession('post');
